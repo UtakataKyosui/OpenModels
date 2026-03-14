@@ -346,16 +346,19 @@ def validate_examples() -> list[Diagnostic]:
     x_openmodels_schema = load_json(ROOT / "schemas" / "x-openmodels.schema.json")
     canonical_schema = load_json(ROOT / "schemas" / "canonical-model.schema.json")
     openapi_document = load_yaml(ROOT / "examples" / "openapi" / "blog-api.yaml")
+    openapi_document_v1 = load_yaml(ROOT / "examples" / "openapi" / "blog-api-v1.yaml")
     canonical_document = load_json(ROOT / "examples" / "canonical" / "blog-model.json")
 
     jsonschema.Draft202012Validator.check_schema(x_openmodels_schema)
     jsonschema.Draft202012Validator.check_schema(canonical_schema)
 
     jsonschema.validate(openapi_document["x-openmodels"], x_openmodels_schema)
+    jsonschema.validate(openapi_document_v1["x-openmodels"], x_openmodels_schema)
     jsonschema.validate(canonical_document, canonical_schema)
 
     diagnostics: list[Diagnostic] = []
     diagnostics.extend(validate_x_openmodels_semantics(openapi_document["x-openmodels"]))
+    diagnostics.extend(validate_x_openmodels_semantics(openapi_document_v1["x-openmodels"]))
     diagnostics.extend(validate_canonical_model_semantics(canonical_document))
     return diagnostics
 

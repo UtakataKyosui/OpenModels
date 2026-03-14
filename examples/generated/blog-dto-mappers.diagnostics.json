@@ -1,0 +1,33 @@
+{
+  "formatVersion": "0.1",
+  "diagnostics": [
+    {
+      "code": "unmapped-entity-field",
+      "direction": "create",
+      "entity": "User",
+      "schema": "UserCreateInput",
+      "field": "passwordHash",
+      "message": "Field 'User.passwordHash' has no direct create mapping and requires a transform or manual assignment."
+    },
+    {
+      "code": "unmapped-dto-property",
+      "direction": "create",
+      "entity": "User",
+      "schema": "UserCreateInput",
+      "property": "password",
+      "message": "Property 'UserCreateInput.password' is not mapped to any persistence field."
+    },
+    {
+      "code": "unmapped-entity-field",
+      "direction": "create",
+      "entity": "Post",
+      "schema": "PostCreateInput",
+      "field": "authorId",
+      "message": "Field 'Post.authorId' has no direct create mapping and requires a transform or manual assignment."
+    }
+  ],
+  "summary": {
+    "totalDiagnostics": 3,
+    "entities": 2
+  }
+}

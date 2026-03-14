@@ -1,0 +1,78 @@
+{
+  "formatVersion": "0.1",
+  "fromModelVersion": "0.1",
+  "toModelVersion": "0.1",
+  "changes": [
+    {
+      "kind": "addColumn",
+      "entity": "Post",
+      "field": "status",
+      "after": {
+        "storageName": "status",
+        "type": "varchar",
+        "nullable": false,
+        "persisted": true,
+        "generated": "none",
+        "enum": "PostStatus",
+        "default": "draft",
+        "length": 32
+      },
+      "destructive": false
+    },
+    {
+      "kind": "addIndex",
+      "entity": "Post",
+      "name": "posts_author_created_at_idx",
+      "after": {
+        "fields": [
+          "authorId",
+          "createdAt"
+        ],
+        "unique": false,
+        "name": "posts_author_created_at_idx"
+      },
+      "destructive": false
+    },
+    {
+      "kind": "alterColumn",
+      "entity": "User",
+      "field": "displayName",
+      "changes": {
+        "length": {
+          "before": 80,
+          "after": 120
+        }
+      },
+      "destructive": false
+    },
+    {
+      "kind": "dropColumn",
+      "entity": "User",
+      "field": "legacyHandle",
+      "before": {
+        "storageName": "legacy_handle",
+        "type": "varchar",
+        "nullable": true,
+        "persisted": true,
+        "generated": "none",
+        "length": 50
+      },
+      "destructive": true
+    }
+  ],
+  "warnings": [
+    {
+      "code": "drop-column",
+      "level": "warning",
+      "entity": "User",
+      "changeKind": "dropColumn",
+      "message": "Column 'User.legacyHandle' would be dropped.",
+      "field": "legacyHandle"
+    }
+  ],
+  "summary": {
+    "totalChanges": 4,
+    "destructiveChanges": 1,
+    "warnings": 1
+  }
+}

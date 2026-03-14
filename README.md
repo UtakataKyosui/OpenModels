@@ -114,18 +114,26 @@ x-openmodels:
 - `docs/phase-1-dsl-and-ir.md`: DSL and canonical IR decisions for Phase 1
 - `docs/phase-2-ingestion-and-diagnostics.md`: OpenAPI ingestion rules and diagnostics
 - `docs/phase-3-orm-adapters.md`: adapter contract and code-generation rules
+- `docs/phase-4-migration-and-mappers.md`: migration planning and DTO mapper rules
 - `docs/spec.md`: extension draft and normalization rules
 - `openmodels/`: loader, normalizer, adapter registry, and generators
 - `schemas/canonical-model.schema.json`: JSON Schema for the normalized IR
 - `schemas/x-openmodels.schema.json`: JSON Schema for `x-openmodels`
 - `scripts/generate_models.py`: generic CLI wrapper that reads `x-openmodels.outputs`
+- `scripts/generate_mappers.py`: DTO mapper generator
+- `scripts/plan_migration.py`: migration plan generator
 - `scripts/generate_drizzle.py`: CLI wrapper to generate Drizzle files
 - `scripts/validate_examples.py`: example validator for DSL and IR samples
 - `tests/test_generation.py`: normalization and Drizzle generation tests
 - `tests/test_ingestion.py`: OpenAPI ingestion and diagnostics tests
+- `tests/test_phase4.py`: migration planning and DTO mapper tests
 - `tests/test_validation.py`: regression tests for DSL and IR validation
 - `examples/canonical/blog-model.json`: normalized IR example
+- `examples/generated/blog-dto-mappers.ts`: generated mapper snapshot
+- `examples/generated/blog-dto-mappers.diagnostics.json`: mapper diagnostics snapshot
 - `examples/generated/blog-schema.ts`: generated Drizzle snapshot
+- `examples/migrations/blog-v1-to-v2.json`: migration plan snapshot
+- `examples/openapi/blog-api-v1.yaml`: previous version fixture for schema evolution
 - `examples/openapi/blog-api.yaml`: sample OpenAPI document using OpenModels
 
 ## Status
@@ -157,6 +165,23 @@ python3 scripts/generate_models.py \
   --input examples/openapi/blog-api.yaml \
   --out-dir generated \
   --target drizzle-pg
+```
+
+Generate DTO mappers from the OpenAPI document with:
+
+```bash
+python3 scripts/generate_mappers.py \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated
+```
+
+Generate a migration plan between two model versions with:
+
+```bash
+python3 scripts/plan_migration.py \
+  --from-input examples/openapi/blog-api-v1.yaml \
+  --to-input examples/openapi/blog-api.yaml \
+  --out generated/blog-v1-to-v2.json
 ```
 
 GitHub Actions runs the same checks on every push to `main` and on pull

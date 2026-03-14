@@ -114,18 +114,26 @@ x-openmodels:
 - `docs/phase-1-dsl-and-ir.md`: Phase 1 の DSL と canonical IR の設計
 - `docs/phase-2-ingestion-and-diagnostics.md`: OpenAPI 取り込みと診断ルール
 - `docs/phase-3-orm-adapters.md`: adapter 契約とコード生成ルール
+- `docs/phase-4-migration-and-mappers.md`: migration planning と DTO mapper のルール
 - `docs/spec.md`: 拡張仕様ドラフトと正規化ルール
 - `openmodels/`: loader、normalizer、adapter registry、generator の実装
 - `schemas/canonical-model.schema.json`: 正規化後 IR 用 JSON Schema
 - `schemas/x-openmodels.schema.json`: `x-openmodels` 用 JSON Schema
 - `scripts/generate_models.py`: `x-openmodels.outputs` を読む汎用 CLI
+- `scripts/generate_mappers.py`: DTO mapper 生成 CLI
+- `scripts/plan_migration.py`: migration plan 生成 CLI
 - `scripts/generate_drizzle.py`: Drizzle ファイル生成用 CLI ラッパー
 - `scripts/validate_examples.py`: DSL と IR のサンプル検証スクリプト
 - `tests/test_generation.py`: 正規化と Drizzle 生成のテスト
 - `tests/test_ingestion.py`: OpenAPI 取り込みと診断のテスト
+- `tests/test_phase4.py`: migration planning と DTO mapper のテスト
 - `tests/test_validation.py`: DSL と IR の回帰テスト
 - `examples/canonical/blog-model.json`: 正規化済み IR のサンプル
+- `examples/generated/blog-dto-mappers.ts`: 生成済み mapper スナップショット
+- `examples/generated/blog-dto-mappers.diagnostics.json`: mapper diagnostics スナップショット
 - `examples/generated/blog-schema.ts`: 生成済み Drizzle スナップショット
+- `examples/migrations/blog-v1-to-v2.json`: migration plan スナップショット
+- `examples/openapi/blog-api-v1.yaml`: schema evolution 用の旧バージョン fixture
 - `examples/openapi/blog-api.yaml`: OpenModels を使った OpenAPI サンプル
 
 ## ステータス
@@ -157,6 +165,23 @@ python3 scripts/generate_models.py \
   --input examples/openapi/blog-api.yaml \
   --out-dir generated \
   --target drizzle-pg
+```
+
+OpenAPI ドキュメントから DTO mapper を生成するには、次を実行します。
+
+```bash
+python3 scripts/generate_mappers.py \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated
+```
+
+2つのモデルバージョンの差分から migration plan を生成するには、次を実行します。
+
+```bash
+python3 scripts/plan_migration.py \
+  --from-input examples/openapi/blog-api-v1.yaml \
+  --to-input examples/openapi/blog-api.yaml \
+  --out generated/blog-v1-to-v2.json
 ```
 
 同じチェックを `.github/workflows/ci.yml` で GitHub Actions にも設定してお
