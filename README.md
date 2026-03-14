@@ -127,8 +127,12 @@ draft format and examples needed to start building a parser, validator, and IR.
 Run the current validation tests with:
 
 ```bash
+python3 -m pip install -r requirements-dev.txt
 python3 -m unittest discover -s tests
 ```
+
+GitHub Actions runs the same checks on every push to `main` and on pull
+requests via `.github/workflows/ci.yml`.
 
 ## License
 

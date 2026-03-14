@@ -127,8 +127,12 @@ x-openmodels:
 現在の検証テストは、次で実行できます。
 
 ```bash
+python3 -m pip install -r requirements-dev.txt
 python3 -m unittest discover -s tests
 ```
+
+同じチェックを `.github/workflows/ci.yml` で GitHub Actions にも設定してお
+り、`main` への push と pull request ごとに実行されます。
 
 ## ライセンス
 
