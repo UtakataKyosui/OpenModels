@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -8,8 +9,13 @@ from typing import Any
 import jsonschema
 import yaml
 
-
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from openmodels.registry import list_adapters
+
+
+KNOWN_ADAPTER_TARGETS = {adapter.key for adapter in list_adapters()}
 
 
 def load_json(path: Path):
@@ -53,6 +59,17 @@ def validate_x_openmodels_semantics(extension: dict[str, Any]) -> list[Diagnosti
     enum_names = set(extension.get("enums", {}).keys())
     entity_names = set(entities.keys())
     field_names = _field_names_by_entity(entities)
+
+    for output_index, output in enumerate(extension.get("outputs", [])):
+        target = output.get("target")
+        if target not in KNOWN_ADAPTER_TARGETS:
+            diagnostics.append(
+                Diagnostic(
+                    code="unknown-output-target",
+                    path=f"outputs[{output_index}].target",
+                    message=f"Unknown output target '{target}'.",
+                )
+            )
 
     for entity_name, entity in entities.items():
         for field_name, field in entity.get("fields", {}).items():
@@ -195,6 +212,17 @@ def validate_canonical_model_semantics(model: dict[str, Any]) -> list[Diagnostic
     entity_names = {entity["name"] for entity in entities}
     field_names = _field_names_by_canonical_entity(entities)
     enum_names = {enum["name"] for enum in model.get("enums", [])}
+
+    for output_index, output in enumerate(model.get("outputs", [])):
+        target = output.get("target")
+        if target not in KNOWN_ADAPTER_TARGETS:
+            diagnostics.append(
+                Diagnostic(
+                    code="unknown-output-target",
+                    path=f"outputs[{output_index}].target",
+                    message=f"Unknown output target '{target}'.",
+                )
+            )
 
     for entity in entities:
         entity_name = entity["name"]

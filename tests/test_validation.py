@@ -39,6 +39,15 @@ class ValidationTests(unittest.TestCase):
 
         self.assertEqual(["unknown-index-field"], [item.code for item in diagnostics])
 
+    def test_x_openmodels_reports_unknown_output_target(self) -> None:
+        document = load_yaml(ROOT / "examples" / "openapi" / "blog-api.yaml")
+        extension = copy.deepcopy(document["x-openmodels"])
+        extension["outputs"][0]["target"] = "missing-target"
+
+        diagnostics = validate_x_openmodels_semantics(extension)
+
+        self.assertEqual(["unknown-output-target"], [item.code for item in diagnostics])
+
     def test_canonical_model_reports_unknown_relation_target(self) -> None:
         model = load_json(ROOT / "examples" / "canonical" / "blog-model.json")
         broken_model = copy.deepcopy(model)
@@ -60,6 +69,15 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual(
             ["unknown-constraint-field"], [item.code for item in diagnostics]
         )
+
+    def test_canonical_model_reports_unknown_output_target(self) -> None:
+        model = load_json(ROOT / "examples" / "canonical" / "blog-model.json")
+        broken_model = copy.deepcopy(model)
+        broken_model["outputs"][0]["target"] = "missing-target"
+
+        diagnostics = validate_canonical_model_semantics(broken_model)
+
+        self.assertEqual(["unknown-output-target"], [item.code for item in diagnostics])
 
 
 if __name__ == "__main__":

@@ -83,6 +83,9 @@ components:
           format: email
 x-openmodels:
   version: "0.1"
+  outputs:
+    - target: drizzle-pg
+      filename: schema.ts
   entities:
     User:
       table: users
@@ -110,10 +113,12 @@ x-openmodels:
 - `docs/phase-0-foundation.md`: problem framing, release boundary, and ADR
 - `docs/phase-1-dsl-and-ir.md`: DSL and canonical IR decisions for Phase 1
 - `docs/phase-2-ingestion-and-diagnostics.md`: OpenAPI ingestion rules and diagnostics
+- `docs/phase-3-orm-adapters.md`: adapter contract and code-generation rules
 - `docs/spec.md`: extension draft and normalization rules
-- `openmodels/`: loader, normalizer, and Drizzle generator implementation
+- `openmodels/`: loader, normalizer, adapter registry, and generators
 - `schemas/canonical-model.schema.json`: JSON Schema for the normalized IR
 - `schemas/x-openmodels.schema.json`: JSON Schema for `x-openmodels`
+- `scripts/generate_models.py`: generic CLI wrapper that reads `x-openmodels.outputs`
 - `scripts/generate_drizzle.py`: CLI wrapper to generate Drizzle files
 - `scripts/validate_examples.py`: example validator for DSL and IR samples
 - `tests/test_generation.py`: normalization and Drizzle generation tests
@@ -137,12 +142,21 @@ python3 -m pip install -r requirements-dev.txt
 python3 -m unittest discover -s tests
 ```
 
-Generate a Drizzle schema file from the example with:
+Generate files declared in `x-openmodels.outputs` with:
 
 ```bash
-python3 scripts/generate_drizzle.py \
+python3 scripts/generate_models.py \
   --input examples/openapi/blog-api.yaml \
   --out-dir generated
+```
+
+Override the adapter target explicitly when needed with:
+
+```bash
+python3 scripts/generate_models.py \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated \
+  --target drizzle-pg
 ```
 
 GitHub Actions runs the same checks on every push to `main` and on pull

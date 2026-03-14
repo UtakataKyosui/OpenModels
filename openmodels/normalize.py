@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
@@ -114,18 +115,29 @@ def _infer_nullable(document: dict[str, Any], field: dict[str, Any]) -> bool:
     return False
 
 
+def _copy_adapters(definition: dict[str, Any]) -> dict[str, Any] | None:
+    adapters = definition.get("adapters")
+    if adapters is None:
+        return None
+    return deepcopy(adapters)
+
+
 def _normalize_enum(
     name: str, enum_definition: dict[str, Any], document: dict[str, Any]
 ) -> dict[str, Any]:
     for pointer in enum_definition.get("schema", {}).values():
         resolve_schema_node(document, pointer)
 
-    return {
+    normalized_enum = {
         "name": name,
         "description": enum_definition.get("description"),
         "sourceSchemas": enum_definition.get("schema", {}),
         "values": enum_definition["values"],
     }
+    adapters = _copy_adapters(enum_definition)
+    if adapters:
+        normalized_enum["adapters"] = adapters
+    return normalized_enum
 
 
 def _normalize_field(
@@ -166,6 +178,9 @@ def _normalize_field(
         normalized_field["primaryKey"] = bool(column["primaryKey"])
     if "unique" in column:
         normalized_field["unique"] = bool(column["unique"])
+    adapters = _copy_adapters(field_definition)
+    if adapters:
+        normalized_field["adapters"] = adapters
 
     return normalized_field
 
@@ -221,6 +236,9 @@ def _normalize_relation(
         normalized_relation["references"] = reference_field
     if "through" in relation_definition:
         normalized_relation["throughEntity"] = relation_definition["through"]
+    adapters = _copy_adapters(relation_definition)
+    if adapters:
+        normalized_relation["adapters"] = adapters
 
     return normalized_relation
 
@@ -267,6 +285,9 @@ def _normalize_constraint(
 
     if "expression" in constraint_definition:
         normalized_constraint["expression"] = constraint_definition["expression"]
+    adapters = _copy_adapters(constraint_definition)
+    if adapters:
+        normalized_constraint["adapters"] = adapters
 
     return normalized_constraint
 
@@ -282,6 +303,9 @@ def _normalize_index(index_definition: dict[str, Any], field_names: set[str]) ->
     }
     if "name" in index_definition:
         normalized_index["name"] = index_definition["name"]
+    adapters = _copy_adapters(index_definition)
+    if adapters:
+        normalized_index["adapters"] = adapters
     return normalized_index
 
 
@@ -298,6 +322,11 @@ def normalize_openapi_document(document: dict[str, Any]) -> dict[str, Any]:
         ],
         "entities": [],
     }
+    adapters = _copy_adapters(extension)
+    if adapters:
+        normalized["adapters"] = adapters
+    if "outputs" in extension:
+        normalized["outputs"] = deepcopy(extension["outputs"])
 
     for entity_name, entity_definition in entities.items():
         field_names = set(entity_definition.get("fields", {}).keys())
@@ -330,6 +359,9 @@ def normalize_openapi_document(document: dict[str, Any]) -> dict[str, Any]:
                 for constraint_definition in entity_definition.get("constraints", [])
             ],
         }
+        adapters = _copy_adapters(entity_definition)
+        if adapters:
+            normalized_entity["adapters"] = adapters
         normalized["entities"].append(normalized_entity)
 
     return normalized

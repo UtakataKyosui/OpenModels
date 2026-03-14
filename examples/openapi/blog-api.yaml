@@ -95,6 +95,9 @@ components:
           format: date-time
 x-openmodels:
   version: "0.1"
+  outputs:
+    - target: drizzle-pg
+      filename: blog-schema.ts
   enums:
     PostStatus:
       schema:
@@ -214,6 +217,10 @@ x-openmodels:
             length: 240
             nullable: false
             generated: application
+          adapters:
+            drizzle-pg:
+              chain:
+                - ".$type<string>()"
           computed:
             expression: slugify(title)
             stored: true

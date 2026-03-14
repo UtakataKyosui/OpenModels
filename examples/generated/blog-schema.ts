@@ -27,7 +27,7 @@ export const posts = pgTable(
     body: text("body").notNull(),
     status: postStatusEnum("status").default("draft").notNull(),
     // computed by application: slugify(title)
-    slug: varchar("slug", { length: 240 }).notNull(),
+    slug: varchar("slug", { length: 240 }).$type<string>().notNull(),
     createdAt: timestamp("created_at", { withTimezone: true, mode: "date" }).defaultNow().notNull(),
   },
   (table) => [

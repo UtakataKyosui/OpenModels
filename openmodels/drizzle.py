@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from .adapter import BackendAdapter, GeneratedFile
 from .common import camel_case, escape_template_literal, snake_case, to_json_literal
+
+
+DRIZZLE_PG_TARGET = "drizzle-pg"
 
 
 def _enum_export_name(enum_name: str) -> str:
@@ -21,9 +25,30 @@ def _render_literal(value: Any) -> str:
     return to_json_literal(value)
 
 
+def _drizzle_adapter_config(definition: dict[str, Any]) -> dict[str, Any]:
+    return definition.get("adapters", {}).get(DRIZZLE_PG_TARGET, {})
+
+
+def _collect_adapter_imports(
+    definition: dict[str, Any],
+    pg_core_imports: set[str],
+    orm_imports: set[str],
+) -> None:
+    adapter_config = _drizzle_adapter_config(definition)
+    imports = adapter_config.get("imports", {})
+    for symbol in imports.get("pgCore", []):
+        pg_core_imports.add(symbol)
+    for symbol in imports.get("orm", []):
+        orm_imports.add(symbol)
+
+
 def _render_column_type(field: dict[str, Any]) -> str:
     storage_name = field.get("storageName", snake_case(field["name"]))
     field_type = field["type"]
+    adapter_config = _drizzle_adapter_config(field)
+    column_factory = adapter_config.get("columnFactory")
+    if column_factory:
+        return f'{column_factory}("{storage_name}")'
 
     if "enum" in field:
         return f'{_enum_export_name(field["enum"])}("{storage_name}")'
@@ -83,6 +108,10 @@ def _render_column(field: dict[str, Any], entity: dict[str, Any], tables_by_enti
     lines: list[str] = []
     column_expression = _render_column_type(field)
     generated = field.get("generated", "none")
+    adapter_config = _drizzle_adapter_config(field)
+
+    for suffix in adapter_config.get("chain", []):
+        column_expression += suffix
 
     if generated == "database" and field["type"] == "uuid" and field.get("primaryKey"):
         column_expression += ".defaultRandom()"
@@ -177,8 +206,9 @@ def _render_table(
 ) -> str:
     table_name = entity["table"]
     export_name = _table_export_name(table_name)
+    table_factory = _drizzle_adapter_config(entity).get("tableFactory", "pgTable")
     lines = [
-        f"export const {export_name} = pgTable(",
+        f"export const {export_name} = {table_factory}(",
         f'  "{table_name}",',
         "  {",
     ]
@@ -292,23 +322,34 @@ def generate_drizzle_schema(canonical_model: dict[str, Any]) -> str:
 
     pg_core_imports = {"pgTable"}
     orm_imports: set[str] = set()
+    _collect_adapter_imports(canonical_model, pg_core_imports, orm_imports)
 
     for enum in canonical_model.get("enums", []):
         pg_core_imports.add("pgEnum")
+        _collect_adapter_imports(enum, pg_core_imports, orm_imports)
 
     for entity in canonical_model.get("entities", []):
+        _collect_adapter_imports(entity, pg_core_imports, orm_imports)
         if entity.get("relations"):
             orm_imports.add("relations")
         if entity.get("indexes"):
             for index_definition in entity["indexes"]:
+                _collect_adapter_imports(index_definition, pg_core_imports, orm_imports)
                 pg_core_imports.add(
                     "uniqueIndex" if index_definition.get("unique") else "index"
                 )
 
         for field in entity["fields"]:
+            _collect_adapter_imports(field, pg_core_imports, orm_imports)
             if "enum" in field:
                 continue
             field_type = field["type"]
+            column_factory = _drizzle_adapter_config(field).get("columnFactory")
+            if column_factory:
+                pg_core_imports.add(column_factory)
+                if "computed" in field and field["computed"].get("stored") and field.get("generated") == "database":
+                    orm_imports.add("sql")
+                continue
             if field_type == "uuid":
                 pg_core_imports.add("uuid")
             elif field_type == "varchar":
@@ -328,6 +369,7 @@ def generate_drizzle_schema(canonical_model: dict[str, Any]) -> str:
                 orm_imports.add("sql")
 
         for constraint in entity.get("constraints", []):
+            _collect_adapter_imports(constraint, pg_core_imports, orm_imports)
             kind = constraint["kind"]
             if kind == "unique":
                 pg_core_imports.add("uniqueIndex")
@@ -379,3 +421,25 @@ def generate_drizzle_schema(canonical_model: dict[str, Any]) -> str:
         sections.append("\n\n".join(relation_blocks))
 
     return "\n\n".join(sections) + "\n"
+
+
+class DrizzlePgAdapter(BackendAdapter):
+    key = DRIZZLE_PG_TARGET
+    description = "Drizzle ORM schema for PostgreSQL"
+    default_filename = "schema.ts"
+
+    def generate_files(
+        self,
+        canonical_model: dict[str, Any],
+        filename: str | None = None,
+        options: dict[str, Any] | None = None,
+    ) -> list[GeneratedFile]:
+        return [
+            GeneratedFile(
+                path=filename or self.default_filename,
+                content=generate_drizzle_schema(canonical_model),
+            )
+        ]
+
+
+DRIZZLE_PG_ADAPTER = DrizzlePgAdapter()

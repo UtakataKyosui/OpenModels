@@ -14,6 +14,15 @@
       "type": "string",
       "pattern": "^[0-9]+\\.[0-9]+$"
     },
+    "adapters": {
+      "$ref": "#/$defs/adapterMap"
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/output"
+      }
+    },
     "enums": {
       "type": "object",
       "additionalProperties": {
@@ -29,6 +38,70 @@
     }
   },
   "$defs": {
+    "jsonScalar": {
+      "type": [
+        "string",
+        "number",
+        "integer",
+        "boolean",
+        "null"
+      ]
+    },
+    "jsonArray": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/jsonValue"
+      }
+    },
+    "jsonObject": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/jsonValue"
+      }
+    },
+    "jsonValue": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/jsonScalar"
+        },
+        {
+          "$ref": "#/$defs/jsonArray"
+        },
+        {
+          "$ref": "#/$defs/jsonObject"
+        }
+      ]
+    },
+    "adapterMap": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {
+        "pattern": "^[a-z0-9][a-z0-9-]*$"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/jsonObject"
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target"
+      ],
+      "properties": {
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "filename": {
+          "type": "string",
+          "minLength": 1
+        },
+        "options": {
+          "$ref": "#/$defs/jsonObject"
+        }
+      }
+    },
     "jsonPointer": {
       "type": "string",
       "pattern": "^#/"
@@ -64,6 +137,9 @@
       "properties": {
         "schema": {
           "$ref": "#/$defs/schemaRefMap"
+        },
+        "adapters": {
+          "$ref": "#/$defs/adapterMap"
         },
         "description": {
           "type": "string"
@@ -158,6 +234,9 @@
         "schema": {
           "$ref": "#/$defs/schemaRefMap"
         },
+        "adapters": {
+          "$ref": "#/$defs/adapterMap"
+        },
         "column": {
           "$ref": "#/$defs/column"
         },
@@ -238,6 +317,9 @@
         "target"
       ],
       "properties": {
+        "adapters": {
+          "$ref": "#/$defs/adapterMap"
+        },
         "kind": {
           "type": "string",
           "enum": [
@@ -283,6 +365,9 @@
           "type": "string",
           "minLength": 1
         },
+        "adapters": {
+          "$ref": "#/$defs/adapterMap"
+        },
         "fields": {
           "type": "array",
           "minItems": 1,
@@ -306,6 +391,9 @@
         "name": {
           "type": "string",
           "minLength": 1
+        },
+        "adapters": {
+          "$ref": "#/$defs/adapterMap"
         },
         "kind": {
           "type": "string",
@@ -344,6 +432,9 @@
         "table": {
           "type": "string",
           "minLength": 1
+        },
+        "adapters": {
+          "$ref": "#/$defs/adapterMap"
         },
         "sourceSchemas": {
           "$ref": "#/$defs/schemaRefMap"

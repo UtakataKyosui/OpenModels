@@ -97,11 +97,11 @@
       ],
       "indexes": [
         {
-          "name": "users_email_key",
           "fields": [
             "email"
           ],
-          "unique": true
+          "unique": true,
+          "name": "users_email_key"
         }
       ],
       "constraints": [
@@ -202,7 +202,14 @@
               "title"
             ]
           },
-          "length": 240
+          "length": 240,
+          "adapters": {
+            "drizzle-pg": {
+              "chain": [
+                ".$type<string>()"
+              ]
+            }
+          }
         },
         {
           "name": "createdAt",
@@ -228,12 +235,12 @@
       ],
       "indexes": [
         {
-          "name": "posts_author_created_at_idx",
           "fields": [
             "authorId",
             "createdAt"
           ],
-          "unique": false
+          "unique": false,
+          "name": "posts_author_created_at_idx"
         }
       ],
       "constraints": [
@@ -258,6 +265,12 @@
           "expression": "slug <> ''"
         }
       ]
+    }
+  ],
+  "outputs": [
+    {
+      "target": "drizzle-pg",
+      "filename": "blog-schema.ts"
     }
   ]
 }

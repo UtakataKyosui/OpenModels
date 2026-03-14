@@ -73,6 +73,9 @@ the document-level extension as the source of truth.
 ```yaml
 x-openmodels:
   version: "0.1"
+  outputs:
+    - target: <adapter-target>
+      filename: <generated-file-name>
   enums:
     <EnumName>:
       schema:
@@ -92,6 +95,9 @@ x-openmodels:
             create: <json-pointer-to-property>
             read: <json-pointer-to-property>
             update: <json-pointer-to-property>
+          adapters:
+            <adapter-target>:
+              <adapter-specific-key>: <json-value>
           enum: <EnumName>
           column:
             type: <backend-neutral-scalar>
@@ -187,11 +193,26 @@ This allows adapters to distinguish between:
 - application-generated persisted fields
 - runtime-only derived fields
 
+### Output Targets
+
+`x-openmodels.outputs` declares which adapter targets should be generated from
+the document by default.
+
+This keeps generation intent in the source YAML instead of requiring external
+CLI-only configuration.
+
+### Adapter Escape Hatches
+
+Backend-specific metadata is allowed under `adapters` blocks on the document and
+schema nodes. The canonical IR carries this metadata forward so an adapter can
+consume it without forcing the common model to absorb every backend-specific
+feature.
+
 ## Normalization Rules
 
 The normalizer should:
 
-1. Load a valid OpenAPI 3.1 document.
+1. Load a valid OpenAPI 3.0.x or 3.1.x document.
 2. Read the top-level `x-openmodels` extension if present.
 3. Resolve JSON Pointer references into concrete schema nodes.
 4. Build a canonical IR for entities, fields, relations, and indexes.
