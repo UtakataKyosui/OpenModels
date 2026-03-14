@@ -31,8 +31,11 @@ jobs:
       - name: Validate example schemas
         run: python scripts/validate_examples.py
 
-      - name: Run regression tests
-        run: python -m unittest discover -s tests
+      - name: Run regression tests with coverage
+        run: python -m coverage run --source=openmodels,scripts -m unittest discover -s tests
+
+      - name: Report coverage
+        run: python -m coverage report -m --fail-under=85
 
   seaorm-compile:
     runs-on: ubuntu-latest

@@ -79,6 +79,38 @@ class ValidationTests(unittest.TestCase):
 
         self.assertEqual(["unknown-output-target"], [item.code for item in diagnostics])
 
+    def test_x_openmodels_reports_relation_and_constraint_reference_problems(self) -> None:
+        document = load_yaml(ROOT / "examples" / "openapi" / "blog-api.yaml")
+        extension = copy.deepcopy(document["x-openmodels"])
+        extension["entities"]["Post"]["relations"]["author"]["foreignKey"] = "missingField"
+        extension["entities"]["Post"]["relations"]["author"]["references"] = "missingField"
+        extension["entities"]["Post"]["constraints"][0]["references"]["entity"] = "MissingUser"
+        extension["entities"]["Post"]["constraints"].append(
+            {"kind": "foreignKey", "fields": ["authorId"]}
+        )
+
+        diagnostics = validate_x_openmodels_semantics(extension)
+        codes = {item.code for item in diagnostics}
+
+        self.assertIn("unknown-foreign-key-field", codes)
+        self.assertIn("unknown-reference-field", codes)
+        self.assertIn("unknown-constraint-target", codes)
+        self.assertIn("missing-foreign-key-reference", codes)
+
+    def test_canonical_model_reports_reference_problems(self) -> None:
+        model = load_json(ROOT / "examples" / "canonical" / "blog-model.json")
+        broken_model = copy.deepcopy(model)
+        broken_model["entities"][1]["relations"][0]["foreignKey"] = "missingField"
+        broken_model["entities"][1]["relations"][0]["references"] = "missingField"
+        broken_model["entities"][1]["constraints"][0]["references"]["entity"] = "MissingUser"
+
+        diagnostics = validate_canonical_model_semantics(broken_model)
+        codes = {item.code for item in diagnostics}
+
+        self.assertIn("unknown-foreign-key-field", codes)
+        self.assertIn("unknown-reference-field", codes)
+        self.assertIn("unknown-constraint-target", codes)
+
 
 if __name__ == "__main__":
     unittest.main()
