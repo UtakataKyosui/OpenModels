@@ -8,6 +8,7 @@ and revisions.
 - `openapi/blog-api.yaml`: current OpenAPI + `x-openmodels` source
 - `openapi/blog-api-v1.yaml`: previous revision used for migration planning
 - `canonical/blog-model.json`: normalized canonical model snapshot
+- `fixtures/seaorm-blog/`: Cargo fixture template for SeaORM compile checks
 - `generated/blog-schema.ts`: generated Drizzle snapshot
 - `generated/seaorm-contract/entity/*.rs`: SeaORM Phase 1 contract snapshots
 - `generated/seaorm-entity/entity/*.rs`: generated SeaORM Phase 3 relation-aware snapshots

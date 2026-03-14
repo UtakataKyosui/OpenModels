@@ -122,6 +122,7 @@ x-openmodels:
 - `docs/seaorm-phase-1-contract.md`: SeaORM target contract と layout の決定
 - `docs/seaorm-phase-2-entities.md`: SeaORM entity 生成の範囲と制限
 - `docs/seaorm-phase-3-relations.md`: SeaORM relation と foreign key 生成
+- `docs/seaorm-phase-4-fixtures.md`: SeaORM fixture、compile check、CI workflow
 - `docs/quickstart.md`: end-to-end の導入ガイド
 - `docs/workflows.md`: 日常的な generator workflow
 - `docs/openapi-first-comparison.md`: plain OpenAPI-first との比較
@@ -134,6 +135,7 @@ x-openmodels:
 - `scripts/generate_mappers.py`: DTO mapper 生成 CLI
 - `scripts/plan_migration.py`: migration plan 生成 CLI
 - `scripts/generate_drizzle.py`: Drizzle ファイル生成用 CLI ラッパー
+- `scripts/check_seaorm_fixture.py`: SeaORM blog fixture の準備と compile check
 - `scripts/validate_examples.py`: DSL と IR のサンプル検証スクリプト
 - `tests/test_generation.py`: 正規化と Drizzle 生成のテスト
 - `tests/test_ingestion.py`: OpenAPI 取り込みと診断のテスト
@@ -144,6 +146,7 @@ x-openmodels:
 - `examples/canonical/blog-model.json`: 正規化済み IR のサンプル
 - `examples/README.md`: example corpus の概要
 - `examples/end-to-end/blog/README.md`: end-to-end walkthrough
+- `examples/fixtures/seaorm-blog/`: SeaORM compile check 用 Cargo fixture
 - `examples/generated/blog-dto-mappers.ts`: 生成済み mapper スナップショット
 - `examples/generated/blog-dto-mappers.diagnostics.json`: mapper diagnostics スナップショット
 - `examples/generated/blog-schema.ts`: 生成済み Drizzle スナップショット
@@ -218,8 +221,10 @@ python3 scripts/plan_migration.py \
 同じチェックを `.github/workflows/ci.yml` で GitHub Actions にも設定してお
 り、`main` への push と pull request ごとに実行されます。
 
-SeaORM は現時点で Phase 3 の relation-aware 生成まで対応しています。relation
-surface と現状の制限は
+SeaORM は現時点で Phase 3 の relation-aware generator に対する Phase 4 の
+fixture と compile check workflow まで対応しています。検証フローは
+[docs/seaorm-phase-4-fixtures.md](./docs/seaorm-phase-4-fixtures.md) を参照し、
+relation surface と現状の制限は
 [docs/seaorm-phase-3-relations.md](./docs/seaorm-phase-3-relations.md) を参照し、
 entity 生成の基準としては
 [docs/seaorm-phase-2-entities.md](./docs/seaorm-phase-2-entities.md) を参照し、

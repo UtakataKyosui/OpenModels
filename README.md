@@ -122,6 +122,7 @@ x-openmodels:
 - `docs/seaorm-phase-1-contract.md`: SeaORM target contract and layout decisions
 - `docs/seaorm-phase-2-entities.md`: SeaORM entity generation scope and limitations
 - `docs/seaorm-phase-3-relations.md`: SeaORM relation and foreign-key generation
+- `docs/seaorm-phase-4-fixtures.md`: SeaORM fixture, compile-check, and CI workflow
 - `docs/quickstart.md`: end-to-end getting-started guide
 - `docs/workflows.md`: day-to-day generator workflows
 - `docs/openapi-first-comparison.md`: comparison with plain OpenAPI-first usage
@@ -134,6 +135,7 @@ x-openmodels:
 - `scripts/generate_mappers.py`: DTO mapper generator
 - `scripts/plan_migration.py`: migration plan generator
 - `scripts/generate_drizzle.py`: CLI wrapper to generate Drizzle files
+- `scripts/check_seaorm_fixture.py`: prepare or compile-check the SeaORM blog fixture
 - `scripts/validate_examples.py`: example validator for DSL and IR samples
 - `tests/test_generation.py`: normalization and Drizzle generation tests
 - `tests/test_ingestion.py`: OpenAPI ingestion and diagnostics tests
@@ -144,6 +146,7 @@ x-openmodels:
 - `examples/canonical/blog-model.json`: normalized IR example
 - `examples/README.md`: example corpus overview
 - `examples/end-to-end/blog/README.md`: end-to-end walkthrough
+- `examples/fixtures/seaorm-blog/`: Cargo fixture template for SeaORM compile checks
 - `examples/generated/blog-dto-mappers.ts`: generated mapper snapshot
 - `examples/generated/blog-dto-mappers.diagnostics.json`: mapper diagnostics snapshot
 - `examples/generated/blog-schema.ts`: generated Drizzle snapshot
@@ -217,7 +220,10 @@ python3 scripts/plan_migration.py \
 GitHub Actions runs the same checks on every push to `main` and on pull
 requests via `.github/workflows/ci.yml`.
 
-SeaORM currently supports Phase 3 relation-aware generation. See
+SeaORM currently includes Phase 4 fixture and compile-check coverage around the
+Phase 3 relation-aware generator. See
+[docs/seaorm-phase-4-fixtures.md](./docs/seaorm-phase-4-fixtures.md) for the
+validation workflow,
 [docs/seaorm-phase-3-relations.md](./docs/seaorm-phase-3-relations.md) for the
 relation surface and current limitations, and keep
 [docs/seaorm-phase-2-entities.md](./docs/seaorm-phase-2-entities.md) for the

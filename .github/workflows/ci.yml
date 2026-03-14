@@ -33,3 +33,24 @@ jobs:
 
       - name: Run regression tests
         run: python -m unittest discover -s tests
+
+  seaorm-compile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements-dev.txt
+
+      - name: Show Rust toolchain
+        run: rustc --version && cargo --version
+
+      - name: Compile-check SeaORM fixture
+        run: python scripts/check_seaorm_fixture.py --input examples/openapi/blog-api.yaml

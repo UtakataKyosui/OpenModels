@@ -48,3 +48,13 @@ Expected file:
 python3 scripts/validate_examples.py
 python3 -m unittest discover -s tests
 ```
+
+## 5. Compile-Check the SeaORM Fixture
+
+```bash
+python3 scripts/check_seaorm_fixture.py
+```
+
+Expected result:
+
+- the generated SeaORM blog fixture passes `cargo check`
