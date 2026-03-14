@@ -1,5 +1,7 @@
 # OpenModels
 
+[English](./README.md) | [日本語](./README.ja.md)
+
 OpenModels is an entity-schema-first toolkit that extends OpenAPI 3.1 with
 `x-openmodels` metadata. The goal is to keep OpenAPI as the public API contract
 while adding the persistence details needed to generate ORM models, migration
