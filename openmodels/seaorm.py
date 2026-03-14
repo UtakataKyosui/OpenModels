@@ -22,6 +22,10 @@ def _seaorm_field_config(field: dict[str, Any]) -> dict[str, Any]:
     return _seaorm_definition_config(field)
 
 
+def _seaorm_relation_config(relation: dict[str, Any]) -> dict[str, Any]:
+    return _seaorm_definition_config(relation)
+
+
 def _module_name(entity: dict[str, Any]) -> str:
     adapter_config = _seaorm_entity_config(entity)
     return adapter_config.get("moduleName", snake_case(entity["name"]))
@@ -111,6 +115,10 @@ def _primary_key_fields(entity: dict[str, Any]) -> list[str]:
                 if field_name not in names:
                     names.append(field_name)
     return names
+
+
+def _column_variant_name(field_name: str) -> str:
+    return upper_camel_case(snake_case(field_name))
 
 
 def _enum_variant_name(value: str) -> str:
@@ -241,22 +249,160 @@ def _render_model(entity: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _relation_comment_lines(entity: dict[str, Any]) -> list[str]:
-    relations = entity.get("relations", [])
-    if not relations:
-        return []
+def _relation_variant_name(relation: dict[str, Any]) -> str:
+    relation_config = _seaorm_relation_config(relation)
+    variant_name = relation_config.get("variantName")
+    if variant_name is None:
+        variant_name = upper_camel_case(snake_case(relation["name"]))
+    if not isinstance(variant_name, str) or not variant_name.strip():
+        raise AdapterError(
+            f"Relation '{relation['name']}' adapters.seaorm-rust.variantName must be a non-empty string."
+        )
+    return variant_name
 
-    lines = [
-        "// OpenModels Phase 2 keeps canonical relations for Phase 3 generation.",
-        "// Planned canonical relations:",
-    ]
-    for relation in relations:
-        detail = f"{relation['name']}: {relation['kind']} {relation['targetEntity']}"
+
+def _related_entity_path(entity_by_name: dict[str, dict[str, Any]], entity_name: str) -> str:
+    return f"super::{_module_name(entity_by_name[entity_name])}::Entity"
+
+
+def _related_column_path(entity_by_name: dict[str, dict[str, Any]], entity_name: str, field_name: str) -> str:
+    return f"super::{_module_name(entity_by_name[entity_name])}::Column::{_column_variant_name(field_name)}"
+
+
+def _seaorm_reference_action(value: str) -> str:
+    mapping = {
+        "noAction": "NoAction",
+        "restrict": "Restrict",
+        "cascade": "Cascade",
+        "setNull": "SetNull",
+        "setDefault": "SetDefault",
+    }
+    try:
+        return mapping[value]
+    except KeyError as exc:
+        raise AdapterError(f"Unsupported SeaORM foreign key action '{value}'.") from exc
+
+
+def _matching_foreign_key_constraint(entity: dict[str, Any], relation: dict[str, Any]) -> dict[str, Any] | None:
+    if relation["kind"] != "belongsTo":
+        return None
+
+    foreign_key = relation.get("foreignKey")
+    reference_field = relation.get("references")
+    if not foreign_key or not reference_field:
+        return None
+
+    for constraint in entity.get("constraints", []):
+        if constraint.get("kind") != "foreignKey":
+            continue
+        if constraint.get("fields") != [foreign_key]:
+            continue
+        references = constraint.get("references", {})
+        if references.get("entity") != relation["targetEntity"]:
+            continue
+        if references.get("fields") != [reference_field]:
+            continue
+        return constraint
+    return None
+
+
+def _relation_attribute_lines(
+    relation: dict[str, Any],
+    entity: dict[str, Any],
+    entity_by_name: dict[str, dict[str, Any]],
+) -> list[str]:
+    relation_config = _seaorm_relation_config(relation)
+    attributes = _render_attribute_lines(
+        relation_config.get("extraAttributes", []),
+        f"Relation '{entity['name']}.{relation['name']}' adapters.seaorm-rust.extraAttributes",
+    )
+
+    target_entity = relation["targetEntity"]
+    target_path = _related_entity_path(entity_by_name, target_entity)
+    kind = relation["kind"]
+    tokens: list[str]
+
+    if kind == "belongsTo":
         foreign_key = relation.get("foreignKey")
         reference_field = relation.get("references")
-        if foreign_key and reference_field:
-            detail += f" via {foreign_key} -> {reference_field}"
-        lines.append(f"// - {detail}")
+        if not foreign_key or not reference_field:
+            raise AdapterError(
+                f"SeaORM belongsTo relation '{entity['name']}.{relation['name']}' requires foreignKey and references."
+            )
+        tokens = [
+            f'belongs_to = "{target_path}"',
+            f'from = "Column::{_column_variant_name(foreign_key)}"',
+            f'to = "{_related_column_path(entity_by_name, target_entity, reference_field)}"',
+        ]
+        constraint = _matching_foreign_key_constraint(entity, relation)
+        if constraint is not None:
+            references = constraint["references"]
+            if "onUpdate" in references:
+                tokens.append(f'on_update = "{_seaorm_reference_action(references["onUpdate"])}"')
+            if "onDelete" in references:
+                tokens.append(f'on_delete = "{_seaorm_reference_action(references["onDelete"])}"')
+    elif kind == "hasMany":
+        tokens = [f'has_many = "{target_path}"']
+    elif kind == "hasOne":
+        tokens = [f'has_one = "{target_path}"']
+    else:
+        raise AdapterError(
+            f"SeaORM Phase 3 does not support relation kind '{kind}' on '{entity['name']}.{relation['name']}'."
+        )
+
+    attributes.append(f"#[sea_orm({', '.join(tokens)})]")
+    return attributes
+
+
+def _render_relation_enum(
+    entity: dict[str, Any],
+    entity_by_name: dict[str, dict[str, Any]],
+) -> str:
+    lines = ["#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]", "pub enum Relation {"]
+    for relation in entity.get("relations", []):
+        for attribute in _relation_attribute_lines(relation, entity, entity_by_name):
+            lines.append(f"    {attribute}")
+        lines.append(f"    {_relation_variant_name(relation)},")
+    lines.append("}")
+    return "\n".join(lines)
+
+
+def _related_impl_lines(
+    entity: dict[str, Any],
+    entity_by_name: dict[str, dict[str, Any]],
+) -> list[str]:
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for relation in entity.get("relations", []):
+        relation_config = _seaorm_relation_config(relation)
+        skip_related_impl = relation_config.get("skipRelatedImpl", False)
+        if not isinstance(skip_related_impl, bool):
+            raise AdapterError(
+                f"Relation '{entity['name']}.{relation['name']}' adapters.seaorm-rust.skipRelatedImpl must be boolean."
+            )
+        if skip_related_impl:
+            continue
+        grouped.setdefault(relation["targetEntity"], []).append(relation)
+
+    for target_entity, relations in grouped.items():
+        if len(relations) > 1:
+            relation_names = ", ".join(relation["name"] for relation in relations)
+            raise AdapterError(
+                f"Entity '{entity['name']}' has multiple SeaORM relations to '{target_entity}' "
+                f"({relation_names}). Set adapters.seaorm-rust.skipRelatedImpl on all but one relation."
+            )
+
+    lines: list[str] = []
+    for target_entity in sorted(grouped):
+        relation = grouped[target_entity][0]
+        lines.extend(
+            [
+                f"impl Related<{_related_entity_path(entity_by_name, target_entity)}> for Entity {{",
+                "    fn to() -> RelationDef {",
+                f"        Relation::{_relation_variant_name(relation)}.def()",
+                "    }",
+                "}",
+            ]
+        )
     return lines
 
 
@@ -265,13 +411,13 @@ def _constraint_comment_lines(entity: dict[str, Any]) -> list[str]:
     constraints = [
         constraint
         for constraint in entity.get("constraints", [])
-        if constraint.get("kind") != "primaryKey"
+        if constraint.get("kind") not in {"primaryKey", "foreignKey"}
     ]
     if not indexes and not constraints:
         return []
 
     lines = [
-        "// OpenModels Phase 2 does not emit indexes or non-primary constraints yet.",
+        "// OpenModels Phase 3 does not emit indexes or non-foreign-key constraints yet.",
     ]
     if indexes:
         lines.append("// Planned indexes:")
@@ -303,6 +449,7 @@ def _render_entity_file(
     entity: dict[str, Any],
     module_root: str,
     enums_by_name: dict[str, dict[str, Any]],
+    entity_by_name: dict[str, dict[str, Any]],
 ) -> GeneratedFile:
     lines = [
         "use sea_orm::entity::prelude::*;",
@@ -320,25 +467,18 @@ def _render_entity_file(
     lines.append(_render_model(entity))
     lines.append("")
 
-    relation_comments = _relation_comment_lines(entity)
-    constraint_comments = _constraint_comment_lines(entity)
-    if relation_comments:
-        lines.extend(relation_comments)
-    if constraint_comments:
-        if relation_comments:
-            lines.append("")
-        lines.extend(constraint_comments)
-    if relation_comments or constraint_comments:
+    lines.append(_render_relation_enum(entity, entity_by_name))
+    related_impls = _related_impl_lines(entity, entity_by_name)
+    if related_impls:
         lines.append("")
+        lines.extend(related_impls)
 
-    lines.extend(
-        [
-            "#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]",
-            "pub enum Relation {}",
-            "",
-            "impl ActiveModelBehavior for ActiveModel {}",
-        ]
-    )
+    constraint_comments = _constraint_comment_lines(entity)
+    if constraint_comments:
+        lines.append("")
+        lines.extend(constraint_comments)
+
+    lines.extend(["", "impl ActiveModelBehavior for ActiveModel {}"])
     return GeneratedFile(path=f"{module_root}/{_module_name(entity)}.rs", content="\n".join(lines) + "\n")
 
 
@@ -387,6 +527,7 @@ class SeaOrmRustAdapter(BackendAdapter):
             raise AdapterError("The seaorm-rust adapter requires a non-empty string for options.moduleRoot.")
 
         entities = canonical_model.get("entities", [])
+        entity_by_name = {entity["name"]: entity for entity in entities}
         enums_by_name = {
             enum_definition["name"]: enum_definition
             for enum_definition in canonical_model.get("enums", [])
@@ -396,7 +537,7 @@ class SeaOrmRustAdapter(BackendAdapter):
             _prelude_file(entities, module_root),
         ]
         files.extend(
-            _render_entity_file(entity, module_root, enums_by_name)
+            _render_entity_file(entity, module_root, enums_by_name, entity_by_name)
             for entity in sorted(entities, key=lambda item: _module_name(item))
         )
         return files

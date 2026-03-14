@@ -35,18 +35,22 @@ pub struct Model {
     pub created_at: DateTimeWithTimeZone,
 }
 
-// OpenModels Phase 2 keeps canonical relations for Phase 3 generation.
-// Planned canonical relations:
-// - author: belongsTo User via authorId -> id
+#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
+pub enum Relation {
+    #[sea_orm(belongs_to = "super::user::Entity", from = "Column::AuthorId", to = "super::user::Column::Id", on_update = "Cascade", on_delete = "Cascade")]
+    Author,
+}
 
-// OpenModels Phase 2 does not emit indexes or non-primary constraints yet.
+impl Related<super::user::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Author.def()
+    }
+}
+
+// OpenModels Phase 3 does not emit indexes or non-foreign-key constraints yet.
 // Planned indexes:
 // - posts_author_created_at_idx: [authorId, createdAt]
 // Planned constraints:
-// - posts_author_fk: foreignKey [authorId] -> User[id]
 // - posts_slug_nonempty: check (slug <> '')
-
-#[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
 
 impl ActiveModelBehavior for ActiveModel {}

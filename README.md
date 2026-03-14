@@ -121,6 +121,7 @@ x-openmodels:
 - `docs/phase-5-release-readiness.md`: release-readiness summary
 - `docs/seaorm-phase-1-contract.md`: SeaORM target contract and layout decisions
 - `docs/seaorm-phase-2-entities.md`: SeaORM entity generation scope and limitations
+- `docs/seaorm-phase-3-relations.md`: SeaORM relation and foreign-key generation
 - `docs/quickstart.md`: end-to-end getting-started guide
 - `docs/workflows.md`: day-to-day generator workflows
 - `docs/openapi-first-comparison.md`: comparison with plain OpenAPI-first usage
@@ -138,7 +139,7 @@ x-openmodels:
 - `tests/test_ingestion.py`: OpenAPI ingestion and diagnostics tests
 - `tests/test_phase4.py`: migration planning and DTO mapper tests
 - `tests/test_phase5.py`: end-to-end workflow and release-readiness docs tests
-- `tests/test_seaorm_phase2.py`: SeaORM entity generation and snapshot tests
+- `tests/test_seaorm_phase3.py`: SeaORM relation-aware generation and snapshot tests
 - `tests/test_validation.py`: regression tests for DSL and IR validation
 - `examples/canonical/blog-model.json`: normalized IR example
 - `examples/README.md`: example corpus overview
@@ -147,7 +148,7 @@ x-openmodels:
 - `examples/generated/blog-dto-mappers.diagnostics.json`: mapper diagnostics snapshot
 - `examples/generated/blog-schema.ts`: generated Drizzle snapshot
 - `examples/generated/seaorm-contract/`: SeaORM Phase 1 contract snapshots
-- `examples/generated/seaorm-entity/`: generated SeaORM Phase 2 entity snapshots
+- `examples/generated/seaorm-entity/`: generated SeaORM Phase 3 relation-aware snapshots
 - `examples/migrations/blog-v1-to-v2.json`: migration plan snapshot
 - `examples/openapi/blog-api-v1.yaml`: previous version fixture for schema evolution
 - `examples/openapi/blog-api.yaml`: sample OpenAPI document using OpenModels
@@ -216,9 +217,11 @@ python3 scripts/plan_migration.py \
 GitHub Actions runs the same checks on every push to `main` and on pull
 requests via `.github/workflows/ci.yml`.
 
-SeaORM currently supports Phase 2 entity generation. See
+SeaORM currently supports Phase 3 relation-aware generation. See
+[docs/seaorm-phase-3-relations.md](./docs/seaorm-phase-3-relations.md) for the
+relation surface and current limitations, and keep
 [docs/seaorm-phase-2-entities.md](./docs/seaorm-phase-2-entities.md) for the
-generated surface and current limitations, and keep
+entity-generation baseline, and keep
 [docs/seaorm-phase-1-contract.md](./docs/seaorm-phase-1-contract.md) as the
 layout contract reference.
 

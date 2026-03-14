@@ -8,6 +8,10 @@ real Rust entity generation.
 The goal of this phase is to emit practical `Entity` modules from the canonical
 model without redesigning the generic adapter surface introduced earlier.
 
+Phase 3 builds on this output and adds relation-aware generation. Keep this
+document as the entity-shape baseline, and see
+`docs/seaorm-phase-3-relations.md` for the current relation surface.
+
 ## Generated Surface
 
 The adapter now generates:
