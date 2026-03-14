@@ -182,4 +182,4 @@ See `examples/openapi/blog-api.yaml` for the current reference example.
 - parse OpenAPI 3.1 documents
 - validate `x-openmodels` against a dedicated JSON Schema
 - normalize into an IR
-- prove the model with one ORM adapter and one migration planner
+- prove the model with a Drizzle adapter first

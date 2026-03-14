@@ -56,6 +56,11 @@ The first draft focuses on:
 - references back to OpenAPI schema and property paths
 - enough structure to drive ORM, migration, and mapper generation later
 
+## First Release Target
+
+The first release is successful when OpenModels can generate Drizzle model
+definition code and write it to files.
+
 ## Example
 
 ```yaml
@@ -102,6 +107,7 @@ x-openmodels:
 
 ## Repository Layout
 
+- `docs/phase-0-foundation.md`: problem framing, release boundary, and ADR
 - `docs/spec.md`: extension draft and normalization rules
 - `schemas/x-openmodels.schema.json`: JSON Schema for `x-openmodels`
 - `examples/openapi/blog-api.yaml`: sample OpenAPI document using OpenModels

@@ -56,6 +56,11 @@ Canonical IR
 - OpenAPI schema や property path への参照
 - 将来の ORM / migration / mapper 生成につながる最小限の構造
 
+## 最初のリリース目標
+
+最初のリリースは、OpenModels が Drizzle のモデル定義コードを生成し、ファイ
+ルとして出力できた時点で成功とみなします。
+
 ## 例
 
 ```yaml
@@ -102,6 +107,7 @@ x-openmodels:
 
 ## リポジトリ構成
 
+- `docs/phase-0-foundation.md`: 問題設定、リリース境界、ADR
 - `docs/spec.md`: 拡張仕様ドラフトと正規化ルール
 - `schemas/x-openmodels.schema.json`: `x-openmodels` 用 JSON Schema
 - `examples/openapi/blog-api.yaml`: OpenModels を使った OpenAPI サンプル
