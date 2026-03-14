@@ -60,6 +60,10 @@ class Phase5WorkflowTests(unittest.TestCase):
         )
 
         self.assertTrue((temp_dir / "blog-schema.ts").exists())
+        self.assertTrue((temp_dir / "seaorm-entity" / "mod.rs").exists())
+        self.assertTrue((temp_dir / "seaorm-entity" / "prelude.rs").exists())
+        self.assertTrue((temp_dir / "seaorm-entity" / "post.rs").exists())
+        self.assertTrue((temp_dir / "seaorm-entity" / "user.rs").exists())
         self.assertTrue((temp_dir / "blog-dto-mappers.ts").exists())
         self.assertTrue((temp_dir / "blog-dto-mappers.diagnostics.json").exists())
         self.assertTrue((temp_dir / "blog-v1-to-v2.json").exists())

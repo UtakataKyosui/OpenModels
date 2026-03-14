@@ -37,11 +37,29 @@ class GenerationTests(unittest.TestCase):
         document = load_openapi_document(ROOT_DIR / "examples" / "openapi" / "blog-api.yaml")
         canonical_model = normalize_openapi_document(document)
 
-        generated_files = generate_artifacts(canonical_model)
+        generated_files = {
+            item.path: item.content
+            for item in generate_artifacts(canonical_model)
+        }
 
-        self.assertEqual(["blog-schema.ts"], [item.path for item in generated_files])
-        expected = (ROOT_DIR / "examples" / "generated" / "blog-schema.ts").read_text()
-        self.assertEqual(expected, generated_files[0].content)
+        expected_paths = [
+            "blog-schema.ts",
+            "seaorm-entity/mod.rs",
+            "seaorm-entity/post.rs",
+            "seaorm-entity/prelude.rs",
+            "seaorm-entity/user.rs",
+        ]
+        self.assertEqual(expected_paths, sorted(generated_files))
+
+        drizzle_expected = (ROOT_DIR / "examples" / "generated" / "blog-schema.ts").read_text()
+        self.assertEqual(drizzle_expected, generated_files["blog-schema.ts"])
+
+        for relative_path in expected_paths[1:]:
+            contract_relative_path = relative_path.replace("seaorm-entity/", "entity/", 1)
+            expected = (
+                ROOT_DIR / "examples" / "generated" / "seaorm-contract" / contract_relative_path
+            ).read_text()
+            self.assertEqual(expected.replace("`entity/", "`seaorm-entity/"), generated_files[relative_path])
 
     def test_cli_writes_declared_output_file(self) -> None:
         temp_dir = Path(tempfile.mkdtemp(prefix="openmodels-cli-"))
@@ -52,7 +70,16 @@ class GenerationTests(unittest.TestCase):
             temp_dir,
         )
 
-        self.assertEqual([temp_dir / "blog-schema.ts"], written_paths)
+        self.assertEqual(
+            [
+                temp_dir / "blog-schema.ts",
+                temp_dir / "seaorm-entity" / "mod.rs",
+                temp_dir / "seaorm-entity" / "prelude.rs",
+                temp_dir / "seaorm-entity" / "post.rs",
+                temp_dir / "seaorm-entity" / "user.rs",
+            ],
+            written_paths,
+        )
         expected = (ROOT_DIR / "examples" / "generated" / "blog-schema.ts").read_text()
         self.assertEqual(expected, written_paths[0].read_text())
 

@@ -98,6 +98,9 @@ x-openmodels:
   outputs:
     - target: drizzle-pg
       filename: blog-schema.ts
+    - target: seaorm-rust
+      options:
+        moduleRoot: seaorm-entity
   enums:
     PostStatus:
       schema:

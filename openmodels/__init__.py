@@ -6,6 +6,7 @@ from .migration import plan_migration
 from .model_io import load_canonical_model
 from .normalize import normalize_openapi_document
 from .registry import get_adapter, list_adapters
+from .seaorm import SEAORM_RUST_TARGET
 
 __all__ = [
     "build_mapper_report",
@@ -18,4 +19,5 @@ __all__ = [
     "load_openapi_document",
     "normalize_openapi_document",
     "plan_migration",
+    "SEAORM_RUST_TARGET",
 ]

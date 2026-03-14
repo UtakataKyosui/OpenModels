@@ -9,6 +9,7 @@ and revisions.
 - `openapi/blog-api-v1.yaml`: previous revision used for migration planning
 - `canonical/blog-model.json`: normalized canonical model snapshot
 - `generated/blog-schema.ts`: generated Drizzle snapshot
+- `generated/seaorm-contract/entity/*.rs`: SeaORM Phase 1 contract snapshots
 - `generated/blog-dto-mappers.ts`: generated mapper snapshot
 - `generated/blog-dto-mappers.diagnostics.json`: mapper diagnostics snapshot
 - `migrations/blog-v1-to-v2.json`: migration plan snapshot

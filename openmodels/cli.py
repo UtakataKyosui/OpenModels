@@ -20,6 +20,7 @@ def _write_generated_files(
     written_paths: list[Path] = []
     for generated_file in generated_files:
         target_path = out_path / generated_file.path
+        ensure_directory(target_path.parent)
         target_path.write_text(generated_file.content)
         written_paths.append(target_path)
     return written_paths
