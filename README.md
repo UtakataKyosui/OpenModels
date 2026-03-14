@@ -120,6 +120,7 @@ x-openmodels:
 - `docs/phase-4-migration-and-mappers.md`: migration planning and DTO mapper rules
 - `docs/phase-5-release-readiness.md`: release-readiness summary
 - `docs/seaorm-phase-1-contract.md`: SeaORM target contract and layout decisions
+- `docs/seaorm-phase-2-entities.md`: SeaORM entity generation scope and limitations
 - `docs/quickstart.md`: end-to-end getting-started guide
 - `docs/workflows.md`: day-to-day generator workflows
 - `docs/openapi-first-comparison.md`: comparison with plain OpenAPI-first usage
@@ -137,7 +138,7 @@ x-openmodels:
 - `tests/test_ingestion.py`: OpenAPI ingestion and diagnostics tests
 - `tests/test_phase4.py`: migration planning and DTO mapper tests
 - `tests/test_phase5.py`: end-to-end workflow and release-readiness docs tests
-- `tests/test_seaorm_phase1.py`: SeaORM contract and snapshot tests
+- `tests/test_seaorm_phase2.py`: SeaORM entity generation and snapshot tests
 - `tests/test_validation.py`: regression tests for DSL and IR validation
 - `examples/canonical/blog-model.json`: normalized IR example
 - `examples/README.md`: example corpus overview
@@ -146,6 +147,7 @@ x-openmodels:
 - `examples/generated/blog-dto-mappers.diagnostics.json`: mapper diagnostics snapshot
 - `examples/generated/blog-schema.ts`: generated Drizzle snapshot
 - `examples/generated/seaorm-contract/`: SeaORM Phase 1 contract snapshots
+- `examples/generated/seaorm-entity/`: generated SeaORM Phase 2 entity snapshots
 - `examples/migrations/blog-v1-to-v2.json`: migration plan snapshot
 - `examples/openapi/blog-api-v1.yaml`: previous version fixture for schema evolution
 - `examples/openapi/blog-api.yaml`: sample OpenAPI document using OpenModels
@@ -185,6 +187,15 @@ python3 scripts/generate_models.py \
   --target drizzle-pg
 ```
 
+Generate only the SeaORM files with:
+
+```bash
+python3 scripts/generate_models.py \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated \
+  --target seaorm-rust
+```
+
 Generate DTO mappers from the OpenAPI document with:
 
 ```bash
@@ -205,9 +216,11 @@ python3 scripts/plan_migration.py \
 GitHub Actions runs the same checks on every push to `main` and on pull
 requests via `.github/workflows/ci.yml`.
 
-SeaORM is currently defined only through a Phase 1 contract. See
-[docs/seaorm-phase-1-contract.md](./docs/seaorm-phase-1-contract.md) for the
-planned layout and unsupported areas.
+SeaORM currently supports Phase 2 entity generation. See
+[docs/seaorm-phase-2-entities.md](./docs/seaorm-phase-2-entities.md) for the
+generated surface and current limitations, and keep
+[docs/seaorm-phase-1-contract.md](./docs/seaorm-phase-1-contract.md) as the
+layout contract reference.
 
 ## License
 

@@ -55,11 +55,11 @@ class GenerationTests(unittest.TestCase):
         self.assertEqual(drizzle_expected, generated_files["blog-schema.ts"])
 
         for relative_path in expected_paths[1:]:
-            contract_relative_path = relative_path.replace("seaorm-entity/", "entity/", 1)
+            snapshot_relative_path = relative_path.replace("seaorm-entity/", "entity/", 1)
             expected = (
-                ROOT_DIR / "examples" / "generated" / "seaorm-contract" / contract_relative_path
+                ROOT_DIR / "examples" / "generated" / "seaorm-entity" / snapshot_relative_path
             ).read_text()
-            self.assertEqual(expected.replace("`entity/", "`seaorm-entity/"), generated_files[relative_path])
+            self.assertEqual(expected, generated_files[relative_path])
 
     def test_cli_writes_declared_output_file(self) -> None:
         temp_dir = Path(tempfile.mkdtemp(prefix="openmodels-cli-"))
@@ -82,6 +82,10 @@ class GenerationTests(unittest.TestCase):
         )
         expected = (ROOT_DIR / "examples" / "generated" / "blog-schema.ts").read_text()
         self.assertEqual(expected, written_paths[0].read_text())
+        expected_seaorm = (
+            ROOT_DIR / "examples" / "generated" / "seaorm-entity" / "entity" / "post.rs"
+        ).read_text()
+        self.assertEqual(expected_seaorm, written_paths[3].read_text())
 
     def test_drizzle_wrapper_can_override_filename(self) -> None:
         temp_dir = Path(tempfile.mkdtemp(prefix="openmodels-drizzle-wrapper-"))

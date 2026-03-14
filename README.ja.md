@@ -120,6 +120,7 @@ x-openmodels:
 - `docs/phase-4-migration-and-mappers.md`: migration planning と DTO mapper のルール
 - `docs/phase-5-release-readiness.md`: release-readiness の要約
 - `docs/seaorm-phase-1-contract.md`: SeaORM target contract と layout の決定
+- `docs/seaorm-phase-2-entities.md`: SeaORM entity 生成の範囲と制限
 - `docs/quickstart.md`: end-to-end の導入ガイド
 - `docs/workflows.md`: 日常的な generator workflow
 - `docs/openapi-first-comparison.md`: plain OpenAPI-first との比較
@@ -137,7 +138,7 @@ x-openmodels:
 - `tests/test_ingestion.py`: OpenAPI 取り込みと診断のテスト
 - `tests/test_phase4.py`: migration planning と DTO mapper のテスト
 - `tests/test_phase5.py`: end-to-end workflow と release-readiness docs のテスト
-- `tests/test_seaorm_phase1.py`: SeaORM contract と snapshot のテスト
+- `tests/test_seaorm_phase2.py`: SeaORM entity 生成と snapshot のテスト
 - `tests/test_validation.py`: DSL と IR の回帰テスト
 - `examples/canonical/blog-model.json`: 正規化済み IR のサンプル
 - `examples/README.md`: example corpus の概要
@@ -146,6 +147,7 @@ x-openmodels:
 - `examples/generated/blog-dto-mappers.diagnostics.json`: mapper diagnostics スナップショット
 - `examples/generated/blog-schema.ts`: 生成済み Drizzle スナップショット
 - `examples/generated/seaorm-contract/`: SeaORM Phase 1 contract の snapshot
+- `examples/generated/seaorm-entity/`: 生成済み SeaORM Phase 2 entity スナップショット
 - `examples/migrations/blog-v1-to-v2.json`: migration plan スナップショット
 - `examples/openapi/blog-api-v1.yaml`: schema evolution 用の旧バージョン fixture
 - `examples/openapi/blog-api.yaml`: OpenModels を使った OpenAPI サンプル
@@ -186,6 +188,15 @@ python3 scripts/generate_models.py \
   --target drizzle-pg
 ```
 
+SeaORM だけを生成したい場合は、次を実行します。
+
+```bash
+python3 scripts/generate_models.py \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated \
+  --target seaorm-rust
+```
+
 OpenAPI ドキュメントから DTO mapper を生成するには、次を実行します。
 
 ```bash
@@ -206,10 +217,12 @@ python3 scripts/plan_migration.py \
 同じチェックを `.github/workflows/ci.yml` で GitHub Actions にも設定してお
 り、`main` への push と pull request ごとに実行されます。
 
-SeaORM は現時点では Phase 1 の contract までです。planned layout と
-unsupported 範囲は
-[docs/seaorm-phase-1-contract.md](./docs/seaorm-phase-1-contract.md) を参照
-してください。
+SeaORM は現時点で Phase 2 の entity 生成まで対応しています。生成される
+surface と現状の制限は
+[docs/seaorm-phase-2-entities.md](./docs/seaorm-phase-2-entities.md) を参照し、
+layout contract の基準としては
+[docs/seaorm-phase-1-contract.md](./docs/seaorm-phase-1-contract.md) を参照して
+ください。
 
 ## ライセンス
 

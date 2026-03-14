@@ -12,14 +12,14 @@ from openmodels.generate import generate_artifacts
 from openmodels.registry import get_adapter
 
 
-class SeaOrmPhase1Tests(unittest.TestCase):
+class SeaOrmPhase2Tests(unittest.TestCase):
     def test_registry_exposes_seaorm_target(self) -> None:
         adapter = get_adapter("seaorm-rust")
 
         self.assertEqual("seaorm-rust", adapter.key)
         self.assertEqual("entity/mod.rs", adapter.default_filename)
 
-    def test_seaorm_contract_matches_snapshots(self) -> None:
+    def test_seaorm_generation_matches_snapshots(self) -> None:
         canonical_model = load_json(
             ROOT_DIR / "examples" / "canonical" / "blog-model.json"
         )
@@ -39,11 +39,11 @@ class SeaOrmPhase1Tests(unittest.TestCase):
 
         for relative_path in expected_paths:
             expected = (
-                ROOT_DIR / "examples" / "generated" / "seaorm-contract" / relative_path
+                ROOT_DIR / "examples" / "generated" / "seaorm-entity" / relative_path
             ).read_text()
             self.assertEqual(expected, generated_files[relative_path])
 
-    def test_seaorm_contract_supports_module_root_option(self) -> None:
+    def test_seaorm_generation_supports_module_root_option(self) -> None:
         canonical_model = load_json(
             ROOT_DIR / "examples" / "canonical" / "blog-model.json"
         )
@@ -69,7 +69,7 @@ class SeaOrmPhase1Tests(unittest.TestCase):
             sorted(item.path for item in generated_files),
         )
 
-    def test_seaorm_contract_rejects_filename_override(self) -> None:
+    def test_seaorm_generation_rejects_filename_override(self) -> None:
         canonical_model = load_json(
             ROOT_DIR / "examples" / "canonical" / "blog-model.json"
         )

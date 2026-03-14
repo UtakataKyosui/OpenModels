@@ -5,6 +5,10 @@
 SeaORM Phase 1 defines the backend contract and output layout before OpenModels
 attempts real Rust entity generation.
 
+Phase 2 builds on this contract and introduces actual entity generation. Keep
+this document as the layout baseline, and see
+`docs/seaorm-phase-2-entities.md` for the current generated surface.
+
 This phase is intentionally planning-oriented. It fixes file structure, target
 key, type mapping direction, and escape hatch shape so SeaORM can be implemented
 incrementally without redesigning the generic adapter surface.
