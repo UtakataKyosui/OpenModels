@@ -127,9 +127,27 @@
           "type": "string",
           "minLength": 1
         },
+        "length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "precision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 0
+        },
         "enum": {
           "type": "string",
           "minLength": 1
+        },
+        "primaryKey": {
+          "type": "boolean"
+        },
+        "unique": {
+          "type": "boolean"
         },
         "nullable": {
           "type": "boolean"

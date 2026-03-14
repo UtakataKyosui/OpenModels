@@ -109,12 +109,18 @@ x-openmodels:
 
 - `docs/phase-0-foundation.md`: problem framing, release boundary, and ADR
 - `docs/phase-1-dsl-and-ir.md`: DSL and canonical IR decisions for Phase 1
+- `docs/phase-2-ingestion-and-diagnostics.md`: OpenAPI ingestion rules and diagnostics
 - `docs/spec.md`: extension draft and normalization rules
+- `openmodels/`: loader, normalizer, and Drizzle generator implementation
 - `schemas/canonical-model.schema.json`: JSON Schema for the normalized IR
 - `schemas/x-openmodels.schema.json`: JSON Schema for `x-openmodels`
+- `scripts/generate_drizzle.py`: CLI wrapper to generate Drizzle files
 - `scripts/validate_examples.py`: example validator for DSL and IR samples
+- `tests/test_generation.py`: normalization and Drizzle generation tests
+- `tests/test_ingestion.py`: OpenAPI ingestion and diagnostics tests
 - `tests/test_validation.py`: regression tests for DSL and IR validation
 - `examples/canonical/blog-model.json`: normalized IR example
+- `examples/generated/blog-schema.ts`: generated Drizzle snapshot
 - `examples/openapi/blog-api.yaml`: sample OpenAPI document using OpenModels
 
 ## Status
@@ -129,6 +135,14 @@ Run the current validation tests with:
 ```bash
 python3 -m pip install -r requirements-dev.txt
 python3 -m unittest discover -s tests
+```
+
+Generate a Drizzle schema file from the example with:
+
+```bash
+python3 scripts/generate_drizzle.py \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated
 ```
 
 GitHub Actions runs the same checks on every push to `main` and on pull

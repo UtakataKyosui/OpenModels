@@ -109,12 +109,18 @@ x-openmodels:
 
 - `docs/phase-0-foundation.md`: 問題設定、リリース境界、ADR
 - `docs/phase-1-dsl-and-ir.md`: Phase 1 の DSL と canonical IR の設計
+- `docs/phase-2-ingestion-and-diagnostics.md`: OpenAPI 取り込みと診断ルール
 - `docs/spec.md`: 拡張仕様ドラフトと正規化ルール
+- `openmodels/`: loader、normalizer、Drizzle generator の実装
 - `schemas/canonical-model.schema.json`: 正規化後 IR 用 JSON Schema
 - `schemas/x-openmodels.schema.json`: `x-openmodels` 用 JSON Schema
+- `scripts/generate_drizzle.py`: Drizzle ファイル生成用 CLI ラッパー
 - `scripts/validate_examples.py`: DSL と IR のサンプル検証スクリプト
+- `tests/test_generation.py`: 正規化と Drizzle 生成のテスト
+- `tests/test_ingestion.py`: OpenAPI 取り込みと診断のテスト
 - `tests/test_validation.py`: DSL と IR の回帰テスト
 - `examples/canonical/blog-model.json`: 正規化済み IR のサンプル
+- `examples/generated/blog-schema.ts`: 生成済み Drizzle スナップショット
 - `examples/openapi/blog-api.yaml`: OpenModels を使った OpenAPI サンプル
 
 ## ステータス
@@ -129,6 +135,14 @@ x-openmodels:
 ```bash
 python3 -m pip install -r requirements-dev.txt
 python3 -m unittest discover -s tests
+```
+
+サンプルから Drizzle schema ファイルを生成するには、次を実行します。
+
+```bash
+python3 scripts/generate_drizzle.py \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated
 ```
 
 同じチェックを `.github/workflows/ci.yml` で GitHub Actions にも設定してお

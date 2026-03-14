@@ -26,16 +26,19 @@
       "fields": [
         {
           "name": "id",
+          "storageName": "id",
           "type": "uuid",
           "nullable": false,
           "persisted": true,
           "generated": "database",
           "sourceSchemas": {
             "read": "#/components/schemas/UserResponse/properties/id"
-          }
+          },
+          "primaryKey": true
         },
         {
           "name": "email",
+          "storageName": "email",
           "type": "varchar",
           "nullable": false,
           "persisted": true,
@@ -43,10 +46,13 @@
           "sourceSchemas": {
             "create": "#/components/schemas/UserCreateInput/properties/email",
             "read": "#/components/schemas/UserResponse/properties/email"
-          }
+          },
+          "length": 255,
+          "unique": true
         },
         {
           "name": "displayName",
+          "storageName": "display_name",
           "type": "varchar",
           "nullable": false,
           "persisted": true,
@@ -54,17 +60,22 @@
           "sourceSchemas": {
             "create": "#/components/schemas/UserCreateInput/properties/displayName",
             "read": "#/components/schemas/UserResponse/properties/displayName"
-          }
+          },
+          "length": 120
         },
         {
           "name": "passwordHash",
+          "storageName": "password_hash",
           "type": "varchar",
           "nullable": false,
           "persisted": true,
-          "generated": "application"
+          "generated": "none",
+          "sourceSchemas": {},
+          "length": 255
         },
         {
           "name": "createdAt",
+          "storageName": "created_at",
           "type": "timestamptz",
           "nullable": false,
           "persisted": true,
@@ -95,8 +106,8 @@
       ],
       "constraints": [
         {
-          "name": "users_email_unique",
           "kind": "unique",
+          "name": "users_email_unique",
           "fields": [
             "email"
           ]
@@ -113,16 +124,19 @@
       "fields": [
         {
           "name": "id",
+          "storageName": "id",
           "type": "uuid",
           "nullable": false,
           "persisted": true,
           "generated": "database",
           "sourceSchemas": {
             "read": "#/components/schemas/PostResponse/properties/id"
-          }
+          },
+          "primaryKey": true
         },
         {
           "name": "authorId",
+          "storageName": "author_id",
           "type": "uuid",
           "nullable": false,
           "persisted": true,
@@ -133,6 +147,7 @@
         },
         {
           "name": "title",
+          "storageName": "title",
           "type": "varchar",
           "nullable": false,
           "persisted": true,
@@ -140,10 +155,12 @@
           "sourceSchemas": {
             "create": "#/components/schemas/PostCreateInput/properties/title",
             "read": "#/components/schemas/PostResponse/properties/title"
-          }
+          },
+          "length": 200
         },
         {
           "name": "body",
+          "storageName": "body",
           "type": "text",
           "nullable": false,
           "persisted": true,
@@ -155,23 +172,29 @@
         },
         {
           "name": "status",
+          "storageName": "status",
           "type": "varchar",
-          "enum": "PostStatus",
           "nullable": false,
           "persisted": true,
           "generated": "none",
-          "default": "draft",
           "sourceSchemas": {
             "create": "#/components/schemas/PostCreateInput/properties/status",
             "read": "#/components/schemas/PostResponse/properties/status"
-          }
+          },
+          "enum": "PostStatus",
+          "default": "draft",
+          "length": 32
         },
         {
           "name": "slug",
+          "storageName": "slug",
           "type": "varchar",
           "nullable": false,
           "persisted": true,
           "generated": "application",
+          "sourceSchemas": {
+            "read": "#/components/schemas/PostResponse/properties/slug"
+          },
           "computed": {
             "expression": "slugify(title)",
             "stored": true,
@@ -179,12 +202,11 @@
               "title"
             ]
           },
-          "sourceSchemas": {
-            "read": "#/components/schemas/PostResponse/properties/slug"
-          }
+          "length": 240
         },
         {
           "name": "createdAt",
+          "storageName": "created_at",
           "type": "timestamptz",
           "nullable": false,
           "persisted": true,
@@ -216,8 +238,8 @@
       ],
       "constraints": [
         {
-          "name": "posts_author_fk",
           "kind": "foreignKey",
+          "name": "posts_author_fk",
           "fields": [
             "authorId"
           ],
@@ -231,8 +253,8 @@
           }
         },
         {
-          "name": "posts_slug_nonempty",
           "kind": "check",
+          "name": "posts_slug_nonempty",
           "expression": "slug <> ''"
         }
       ]

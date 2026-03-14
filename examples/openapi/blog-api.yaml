@@ -62,6 +62,8 @@ components:
         body:
           type: string
           minLength: 1
+        status:
+          $ref: "#/components/schemas/PostStatus"
     PostResponse:
       type: object
       additionalProperties: false
