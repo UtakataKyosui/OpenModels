@@ -1,0 +1,218 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/UtakataKyosui/OpenModels/main/schemas/x-openmodels.schema.json",
+  "title": "OpenModels Extension",
+  "description": "JSON Schema for the top-level x-openmodels extension used inside an OpenAPI 3.1 document.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entities"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+$"
+    },
+    "entities": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/entity"
+      }
+    }
+  },
+  "$defs": {
+    "jsonPointer": {
+      "type": "string",
+      "pattern": "^#/"
+    },
+    "schemaRefMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "$ref": "#/$defs/jsonPointer"
+        },
+        "read": {
+          "$ref": "#/$defs/jsonPointer"
+        },
+        "update": {
+          "$ref": "#/$defs/jsonPointer"
+        }
+      },
+      "minProperties": 1
+    },
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "primaryKey": {
+          "type": "boolean"
+        },
+        "nullable": {
+          "type": "boolean"
+        },
+        "unique": {
+          "type": "boolean"
+        },
+        "generated": {
+          "type": "string",
+          "enum": [
+            "database",
+            "application"
+          ]
+        },
+        "default": {
+          "type": [
+            "string",
+            "number",
+            "integer",
+            "boolean",
+            "null"
+          ]
+        },
+        "length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "precision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "$ref": "#/$defs/schemaRefMap"
+        },
+        "column": {
+          "$ref": "#/$defs/column"
+        },
+        "virtual": {
+          "type": "boolean"
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "schema"
+          ]
+        },
+        {
+          "required": [
+            "column"
+          ]
+        }
+      ]
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "target"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "belongsTo",
+            "hasOne",
+            "hasMany",
+            "manyToMany"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "foreignKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "through": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fields"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unique": {
+          "type": "boolean"
+        }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "table",
+        "fields"
+      ],
+      "properties": {
+        "table": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceSchemas": {
+          "$ref": "#/$defs/schemaRefMap"
+        },
+        "fields": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/$defs/field"
+          }
+        },
+        "relations": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/relation"
+          }
+        },
+        "indexes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/index"
+          }
+        }
+      }
+    }
+  }
+}

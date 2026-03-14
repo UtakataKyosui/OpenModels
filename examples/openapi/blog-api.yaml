@@ -1,0 +1,185 @@
+openapi: 3.1.0
+info:
+  title: OpenModels Blog Example
+  version: 0.1.0
+paths: {}
+components:
+  schemas:
+    UserCreateInput:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+        - displayName
+      properties:
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+          minLength: 1
+          maxLength: 120
+        password:
+          type: string
+          minLength: 12
+    UserResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - email
+        - displayName
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+    PostCreateInput:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - body
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        body:
+          type: string
+          minLength: 1
+    PostResponse:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - authorId
+        - title
+        - body
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        authorId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        body:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+x-openmodels:
+  version: "0.1"
+  entities:
+    User:
+      table: users
+      sourceSchemas:
+        create: "#/components/schemas/UserCreateInput"
+        read: "#/components/schemas/UserResponse"
+      fields:
+        id:
+          schema:
+            read: "#/components/schemas/UserResponse/properties/id"
+          column:
+            type: uuid
+            primaryKey: true
+            generated: database
+        email:
+          schema:
+            create: "#/components/schemas/UserCreateInput/properties/email"
+            read: "#/components/schemas/UserResponse/properties/email"
+          column:
+            type: varchar
+            length: 255
+            unique: true
+            nullable: false
+        displayName:
+          schema:
+            create: "#/components/schemas/UserCreateInput/properties/displayName"
+            read: "#/components/schemas/UserResponse/properties/displayName"
+          column:
+            type: varchar
+            length: 120
+            nullable: false
+        passwordHash:
+          column:
+            type: varchar
+            length: 255
+            nullable: false
+        createdAt:
+          schema:
+            read: "#/components/schemas/UserResponse/properties/createdAt"
+          column:
+            type: timestamptz
+            generated: database
+      relations:
+        posts:
+          kind: hasMany
+          target: Post
+          foreignKey: authorId
+      indexes:
+        - name: users_email_key
+          fields:
+            - email
+          unique: true
+    Post:
+      table: posts
+      sourceSchemas:
+        create: "#/components/schemas/PostCreateInput"
+        read: "#/components/schemas/PostResponse"
+      fields:
+        id:
+          schema:
+            read: "#/components/schemas/PostResponse/properties/id"
+          column:
+            type: uuid
+            primaryKey: true
+            generated: database
+        authorId:
+          schema:
+            read: "#/components/schemas/PostResponse/properties/authorId"
+          column:
+            type: uuid
+            nullable: false
+        title:
+          schema:
+            create: "#/components/schemas/PostCreateInput/properties/title"
+            read: "#/components/schemas/PostResponse/properties/title"
+          column:
+            type: varchar
+            length: 200
+            nullable: false
+        body:
+          schema:
+            create: "#/components/schemas/PostCreateInput/properties/body"
+            read: "#/components/schemas/PostResponse/properties/body"
+          column:
+            type: text
+            nullable: false
+        createdAt:
+          schema:
+            read: "#/components/schemas/PostResponse/properties/createdAt"
+          column:
+            type: timestamptz
+            generated: database
+      relations:
+        author:
+          kind: belongsTo
+          target: User
+          foreignKey: authorId
+      indexes:
+        - name: posts_author_created_at_idx
+          fields:
+            - authorId
+            - createdAt
