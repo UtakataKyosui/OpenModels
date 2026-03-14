@@ -5,6 +5,12 @@ info:
 paths: {}
 components:
   schemas:
+    PostStatus:
+      type: string
+      enum:
+        - draft
+        - published
+        - archived
     UserCreateInput:
       type: object
       additionalProperties: false
@@ -64,6 +70,8 @@ components:
         - authorId
         - title
         - body
+        - status
+        - slug
         - createdAt
       properties:
         id:
@@ -76,11 +84,25 @@ components:
           type: string
         body:
           type: string
+        status:
+          $ref: "#/components/schemas/PostStatus"
+        slug:
+          type: string
         createdAt:
           type: string
           format: date-time
 x-openmodels:
   version: "0.1"
+  enums:
+    PostStatus:
+      schema:
+        create: "#/components/schemas/PostStatus"
+        read: "#/components/schemas/PostStatus"
+      description: Lifecycle state for a blog post
+      values:
+        - draft
+        - published
+        - archived
   entities:
     User:
       table: users
@@ -133,6 +155,11 @@ x-openmodels:
           fields:
             - email
           unique: true
+      constraints:
+        - name: users_email_unique
+          kind: unique
+          fields:
+            - email
     Post:
       table: posts
       sourceSchemas:
@@ -167,6 +194,29 @@ x-openmodels:
           column:
             type: text
             nullable: false
+        status:
+          schema:
+            create: "#/components/schemas/PostCreateInput/properties/status"
+            read: "#/components/schemas/PostResponse/properties/status"
+          enum: PostStatus
+          column:
+            type: varchar
+            length: 32
+            nullable: false
+            default: draft
+        slug:
+          schema:
+            read: "#/components/schemas/PostResponse/properties/slug"
+          column:
+            type: varchar
+            length: 240
+            nullable: false
+            generated: application
+          computed:
+            expression: slugify(title)
+            stored: true
+            dependsOn:
+              - title
         createdAt:
           schema:
             read: "#/components/schemas/PostResponse/properties/createdAt"
@@ -183,3 +233,17 @@ x-openmodels:
           fields:
             - authorId
             - createdAt
+      constraints:
+        - name: posts_author_fk
+          kind: foreignKey
+          fields:
+            - authorId
+          references:
+            entity: User
+            fields:
+              - id
+            onDelete: cascade
+            onUpdate: cascade
+        - name: posts_slug_nonempty
+          kind: check
+          expression: "slug <> ''"

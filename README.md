@@ -108,14 +108,27 @@ x-openmodels:
 ## Repository Layout
 
 - `docs/phase-0-foundation.md`: problem framing, release boundary, and ADR
+- `docs/phase-1-dsl-and-ir.md`: DSL and canonical IR decisions for Phase 1
 - `docs/spec.md`: extension draft and normalization rules
+- `schemas/canonical-model.schema.json`: JSON Schema for the normalized IR
 - `schemas/x-openmodels.schema.json`: JSON Schema for `x-openmodels`
+- `scripts/validate_examples.py`: example validator for DSL and IR samples
+- `tests/test_validation.py`: regression tests for DSL and IR validation
+- `examples/canonical/blog-model.json`: normalized IR example
 - `examples/openapi/blog-api.yaml`: sample OpenAPI document using OpenModels
 
 ## Status
 
 This repository is still in the design phase. The current deliverables are the
 draft format and examples needed to start building a parser, validator, and IR.
+
+## Testing
+
+Run the current validation tests with:
+
+```bash
+python3 -m unittest discover -s tests
+```
 
 ## License
 

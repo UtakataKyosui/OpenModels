@@ -73,6 +73,12 @@ the document-level extension as the source of truth.
 ```yaml
 x-openmodels:
   version: "0.1"
+  enums:
+    <EnumName>:
+      schema:
+        create: <json-pointer-to-openapi-schema>
+        read: <json-pointer-to-openapi-schema>
+      values: [<enum-literal>]
   entities:
     <EntityName>:
       table: <string>
@@ -86,6 +92,7 @@ x-openmodels:
             create: <json-pointer-to-property>
             read: <json-pointer-to-property>
             update: <json-pointer-to-property>
+          enum: <EnumName>
           column:
             type: <backend-neutral-scalar>
             primaryKey: <boolean>
@@ -96,16 +103,28 @@ x-openmodels:
             length: <integer>
             precision: <integer>
             scale: <integer>
+          computed:
+            expression: <string>
+            stored: <boolean>
+            dependsOn: [<fieldName>]
       relations:
         <relationName>:
           kind: belongsTo | hasOne | hasMany | manyToMany
           target: <EntityName>
           foreignKey: <fieldName>
+          references: <fieldName>
           through: <EntityName>
       indexes:
         - name: <string>
           fields: [<fieldName>]
           unique: <boolean>
+      constraints:
+        - kind: primaryKey | unique | foreignKey | check
+          fields: [<fieldName>]
+          references:
+            entity: <EntityName>
+            fields: [<fieldName>]
+          expression: <string>
 ```
 
 ## Semantics
@@ -147,6 +166,27 @@ If ownership is ambiguous, normalization should fail instead of guessing.
 Field-level `unique: true` is allowed for common cases. Multi-column uniqueness
 and indexes should be described under `indexes`.
 
+### Enums
+
+OpenModels enums are declared once under top-level `x-openmodels.enums` and then
+referenced by fields. This avoids re-deriving logical enums from individual
+string columns or duplicated OpenAPI fragments.
+
+### Constraints
+
+Constraints describe storage rules explicitly and are separate from relations.
+This allows the canonical IR to support both ORM generation and future DDL or
+migration planning work.
+
+### Computed Fields
+
+Computed fields carry a derivation expression and whether the result is stored.
+This allows adapters to distinguish between:
+
+- stored computed columns
+- application-generated persisted fields
+- runtime-only derived fields
+
 ## Normalization Rules
 
 The normalizer should:
@@ -176,6 +216,13 @@ At minimum, the implementation should report:
 ## Example
 
 See `examples/openapi/blog-api.yaml` for the current reference example.
+
+## Canonical IR
+
+Phase 1 also defines a backend-agnostic normalized IR. See:
+
+- `schemas/canonical-model.schema.json`
+- `examples/canonical/blog-model.json`
 
 ## Next Implementation Steps
 

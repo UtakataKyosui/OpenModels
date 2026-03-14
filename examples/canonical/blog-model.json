@@ -1,0 +1,241 @@
+{
+  "version": "0.1",
+  "enums": [
+    {
+      "name": "PostStatus",
+      "description": "Lifecycle state for a blog post",
+      "sourceSchemas": {
+        "create": "#/components/schemas/PostStatus",
+        "read": "#/components/schemas/PostStatus"
+      },
+      "values": [
+        "draft",
+        "published",
+        "archived"
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "name": "User",
+      "table": "users",
+      "sourceSchemas": {
+        "create": "#/components/schemas/UserCreateInput",
+        "read": "#/components/schemas/UserResponse"
+      },
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "persisted": true,
+          "generated": "database",
+          "sourceSchemas": {
+            "read": "#/components/schemas/UserResponse/properties/id"
+          }
+        },
+        {
+          "name": "email",
+          "type": "varchar",
+          "nullable": false,
+          "persisted": true,
+          "generated": "none",
+          "sourceSchemas": {
+            "create": "#/components/schemas/UserCreateInput/properties/email",
+            "read": "#/components/schemas/UserResponse/properties/email"
+          }
+        },
+        {
+          "name": "displayName",
+          "type": "varchar",
+          "nullable": false,
+          "persisted": true,
+          "generated": "none",
+          "sourceSchemas": {
+            "create": "#/components/schemas/UserCreateInput/properties/displayName",
+            "read": "#/components/schemas/UserResponse/properties/displayName"
+          }
+        },
+        {
+          "name": "passwordHash",
+          "type": "varchar",
+          "nullable": false,
+          "persisted": true,
+          "generated": "application"
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamptz",
+          "nullable": false,
+          "persisted": true,
+          "generated": "database",
+          "sourceSchemas": {
+            "read": "#/components/schemas/UserResponse/properties/createdAt"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "name": "posts",
+          "kind": "hasMany",
+          "targetEntity": "Post",
+          "ownership": "inverse",
+          "foreignKey": "authorId",
+          "references": "id"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "users_email_key",
+          "fields": [
+            "email"
+          ],
+          "unique": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "users_email_unique",
+          "kind": "unique",
+          "fields": [
+            "email"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Post",
+      "table": "posts",
+      "sourceSchemas": {
+        "create": "#/components/schemas/PostCreateInput",
+        "read": "#/components/schemas/PostResponse"
+      },
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "persisted": true,
+          "generated": "database",
+          "sourceSchemas": {
+            "read": "#/components/schemas/PostResponse/properties/id"
+          }
+        },
+        {
+          "name": "authorId",
+          "type": "uuid",
+          "nullable": false,
+          "persisted": true,
+          "generated": "none",
+          "sourceSchemas": {
+            "read": "#/components/schemas/PostResponse/properties/authorId"
+          }
+        },
+        {
+          "name": "title",
+          "type": "varchar",
+          "nullable": false,
+          "persisted": true,
+          "generated": "none",
+          "sourceSchemas": {
+            "create": "#/components/schemas/PostCreateInput/properties/title",
+            "read": "#/components/schemas/PostResponse/properties/title"
+          }
+        },
+        {
+          "name": "body",
+          "type": "text",
+          "nullable": false,
+          "persisted": true,
+          "generated": "none",
+          "sourceSchemas": {
+            "create": "#/components/schemas/PostCreateInput/properties/body",
+            "read": "#/components/schemas/PostResponse/properties/body"
+          }
+        },
+        {
+          "name": "status",
+          "type": "varchar",
+          "enum": "PostStatus",
+          "nullable": false,
+          "persisted": true,
+          "generated": "none",
+          "default": "draft",
+          "sourceSchemas": {
+            "create": "#/components/schemas/PostCreateInput/properties/status",
+            "read": "#/components/schemas/PostResponse/properties/status"
+          }
+        },
+        {
+          "name": "slug",
+          "type": "varchar",
+          "nullable": false,
+          "persisted": true,
+          "generated": "application",
+          "computed": {
+            "expression": "slugify(title)",
+            "stored": true,
+            "dependsOn": [
+              "title"
+            ]
+          },
+          "sourceSchemas": {
+            "read": "#/components/schemas/PostResponse/properties/slug"
+          }
+        },
+        {
+          "name": "createdAt",
+          "type": "timestamptz",
+          "nullable": false,
+          "persisted": true,
+          "generated": "database",
+          "sourceSchemas": {
+            "read": "#/components/schemas/PostResponse/properties/createdAt"
+          }
+        }
+      ],
+      "relations": [
+        {
+          "name": "author",
+          "kind": "belongsTo",
+          "targetEntity": "User",
+          "ownership": "owner",
+          "foreignKey": "authorId",
+          "references": "id"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "posts_author_created_at_idx",
+          "fields": [
+            "authorId",
+            "createdAt"
+          ],
+          "unique": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "posts_author_fk",
+          "kind": "foreignKey",
+          "fields": [
+            "authorId"
+          ],
+          "references": {
+            "entity": "User",
+            "fields": [
+              "id"
+            ],
+            "onDelete": "cascade",
+            "onUpdate": "cascade"
+          }
+        },
+        {
+          "name": "posts_slug_nonempty",
+          "kind": "check",
+          "expression": "slug <> ''"
+        }
+      ]
+    }
+  ]
+}

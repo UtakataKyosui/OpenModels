@@ -108,14 +108,27 @@ x-openmodels:
 ## リポジトリ構成
 
 - `docs/phase-0-foundation.md`: 問題設定、リリース境界、ADR
+- `docs/phase-1-dsl-and-ir.md`: Phase 1 の DSL と canonical IR の設計
 - `docs/spec.md`: 拡張仕様ドラフトと正規化ルール
+- `schemas/canonical-model.schema.json`: 正規化後 IR 用 JSON Schema
 - `schemas/x-openmodels.schema.json`: `x-openmodels` 用 JSON Schema
+- `scripts/validate_examples.py`: DSL と IR のサンプル検証スクリプト
+- `tests/test_validation.py`: DSL と IR の回帰テスト
+- `examples/canonical/blog-model.json`: 正規化済み IR のサンプル
 - `examples/openapi/blog-api.yaml`: OpenModels を使った OpenAPI サンプル
 
 ## ステータス
 
 このリポジトリはまだ設計段階です。現時点では parser、validator、IR の実
 装を始めるための仕様ドラフトとサンプルを整備しています。
+
+## テスト
+
+現在の検証テストは、次で実行できます。
+
+```bash
+python3 -m unittest discover -s tests
+```
 
 ## ライセンス
 

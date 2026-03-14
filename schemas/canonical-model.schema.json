@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/UtakataKyosui/OpenModels/main/schemas/x-openmodels.schema.json",
-  "title": "OpenModels Extension",
-  "description": "JSON Schema for the top-level x-openmodels extension used inside an OpenAPI 3.1 document.",
+  "$id": "https://raw.githubusercontent.com/UtakataKyosui/OpenModels/main/schemas/canonical-model.schema.json",
+  "title": "OpenModels Canonical Model",
+  "description": "Normalized backend-agnostic IR consumed by generators.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -15,58 +15,61 @@
       "pattern": "^[0-9]+\\.[0-9]+$"
     },
     "enums": {
-      "type": "object",
-      "additionalProperties": {
+      "type": "array",
+      "items": {
         "$ref": "#/$defs/enum"
       }
     },
     "entities": {
-      "type": "object",
-      "minProperties": 1,
-      "additionalProperties": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
         "$ref": "#/$defs/entity"
       }
     }
   },
   "$defs": {
-    "jsonPointer": {
-      "type": "string",
-      "pattern": "^#/"
-    },
-    "schemaRefMap": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "create": {
-          "$ref": "#/$defs/jsonPointer"
-        },
-        "read": {
-          "$ref": "#/$defs/jsonPointer"
-        },
-        "update": {
-          "$ref": "#/$defs/jsonPointer"
-        }
-      },
-      "minProperties": 1
-    },
     "enumValue": {
       "type": [
         "string",
         "integer"
       ]
     },
+    "sourceSchemas": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create": {
+          "type": "string",
+          "pattern": "^#/"
+        },
+        "read": {
+          "type": "string",
+          "pattern": "^#/"
+        },
+        "update": {
+          "type": "string",
+          "pattern": "^#/"
+        }
+      }
+    },
     "enum": {
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "name",
         "values"
       ],
       "properties": {
-        "schema": {
-          "$ref": "#/$defs/schemaRefMap"
+        "name": {
+          "type": "string",
+          "minLength": 1
         },
         "description": {
           "type": "string"
+        },
+        "sourceSchemas": {
+          "$ref": "#/$defs/sourceSchemas"
         },
         "values": {
           "type": "array",
@@ -74,56 +77,6 @@
           "items": {
             "$ref": "#/$defs/enumValue"
           }
-        }
-      }
-    },
-    "column": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "type"
-      ],
-      "properties": {
-        "type": {
-          "type": "string",
-          "minLength": 1
-        },
-        "primaryKey": {
-          "type": "boolean"
-        },
-        "nullable": {
-          "type": "boolean"
-        },
-        "unique": {
-          "type": "boolean"
-        },
-        "generated": {
-          "type": "string",
-          "enum": [
-            "database",
-            "application"
-          ]
-        },
-        "default": {
-          "type": [
-            "string",
-            "number",
-            "integer",
-            "boolean",
-            "null"
-          ]
-        },
-        "length": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "precision": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "scale": {
-          "type": "integer",
-          "minimum": 0
         }
       }
     },
@@ -154,41 +107,87 @@
     "field": {
       "type": "object",
       "additionalProperties": false,
+      "required": [
+        "name",
+        "type",
+        "nullable",
+        "persisted",
+        "generated"
+      ],
       "properties": {
-        "schema": {
-          "$ref": "#/$defs/schemaRefMap"
+        "name": {
+          "type": "string",
+          "minLength": 1
         },
-        "column": {
-          "$ref": "#/$defs/column"
+        "storageName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
         },
         "enum": {
           "type": "string",
           "minLength": 1
         },
+        "nullable": {
+          "type": "boolean"
+        },
+        "persisted": {
+          "type": "boolean"
+        },
+        "generated": {
+          "type": "string",
+          "enum": [
+            "none",
+            "database",
+            "application"
+          ]
+        },
+        "default": {
+          "type": [
+            "string",
+            "number",
+            "integer",
+            "boolean",
+            "null"
+          ]
+        },
         "computed": {
           "$ref": "#/$defs/computed"
         },
-        "virtual": {
-          "type": "boolean"
-        },
-        "description": {
-          "type": "string"
+        "sourceSchemas": {
+          "$ref": "#/$defs/sourceSchemas"
         }
-      },
-      "anyOf": [
-        {
-          "required": [
-            "schema"
-          ]
-        },
-        {
-          "required": [
-            "column"
-          ]
-        }
-      ]
+      }
     },
-    "foreignReference": {
+    "index": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fields",
+        "unique"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "unique": {
+          "type": "boolean"
+        }
+      }
+    },
+    "reference": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -230,72 +229,6 @@
         }
       }
     },
-    "relation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "kind",
-        "target"
-      ],
-      "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "belongsTo",
-            "hasOne",
-            "hasMany",
-            "manyToMany"
-          ]
-        },
-        "target": {
-          "type": "string",
-          "minLength": 1
-        },
-        "foreignKey": {
-          "type": "string",
-          "minLength": 1
-        },
-        "references": {
-          "type": "string",
-          "minLength": 1
-        },
-        "through": {
-          "type": "string",
-          "minLength": 1
-        },
-        "throughFields": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        }
-      }
-    },
-    "index": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "fields"
-      ],
-      "properties": {
-        "name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "fields": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "unique": {
-          "type": "boolean"
-        }
-      }
-    },
     "constraint": {
       "type": "object",
       "additionalProperties": false,
@@ -318,16 +251,63 @@
         },
         "fields": {
           "type": "array",
-          "minItems": 1,
           "items": {
             "type": "string",
             "minLength": 1
           }
         },
         "references": {
-          "$ref": "#/$defs/foreignReference"
+          "$ref": "#/$defs/reference"
         },
         "expression": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "targetEntity",
+        "ownership"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "belongsTo",
+            "hasOne",
+            "hasMany",
+            "manyToMany"
+          ]
+        },
+        "targetEntity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ownership": {
+          "type": "string",
+          "enum": [
+            "owner",
+            "inverse"
+          ]
+        },
+        "foreignKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "references": {
+          "type": "string",
+          "minLength": 1
+        },
+        "throughEntity": {
           "type": "string",
           "minLength": 1
         }
@@ -337,27 +317,32 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "name",
         "table",
         "fields"
       ],
       "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
         "table": {
           "type": "string",
           "minLength": 1
         },
         "sourceSchemas": {
-          "$ref": "#/$defs/schemaRefMap"
+          "$ref": "#/$defs/sourceSchemas"
         },
         "fields": {
-          "type": "object",
-          "minProperties": 1,
-          "additionalProperties": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
             "$ref": "#/$defs/field"
           }
         },
         "relations": {
-          "type": "object",
-          "additionalProperties": {
+          "type": "array",
+          "items": {
             "$ref": "#/$defs/relation"
           }
         },
