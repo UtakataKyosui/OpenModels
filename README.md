@@ -7,6 +7,9 @@ OpenModels is an entity-schema-first toolkit that extends OpenAPI 3.1 with
 while adding the persistence details needed to generate ORM models, migration
 plans, and DTO mappers.
 
+Start with [docs/quickstart.md](./docs/quickstart.md) if you want the fastest
+path from clone to generated artifacts.
+
 ## Why
 
 OpenAPI is strong at describing request and response shapes, but it cannot fully
@@ -115,6 +118,11 @@ x-openmodels:
 - `docs/phase-2-ingestion-and-diagnostics.md`: OpenAPI ingestion rules and diagnostics
 - `docs/phase-3-orm-adapters.md`: adapter contract and code-generation rules
 - `docs/phase-4-migration-and-mappers.md`: migration planning and DTO mapper rules
+- `docs/phase-5-release-readiness.md`: release-readiness summary
+- `docs/quickstart.md`: end-to-end getting-started guide
+- `docs/workflows.md`: day-to-day generator workflows
+- `docs/openapi-first-comparison.md`: comparison with plain OpenAPI-first usage
+- `docs/release-policy.md`: versioning policy and release checklist
 - `docs/spec.md`: extension draft and normalization rules
 - `openmodels/`: loader, normalizer, adapter registry, and generators
 - `schemas/canonical-model.schema.json`: JSON Schema for the normalized IR
@@ -127,8 +135,11 @@ x-openmodels:
 - `tests/test_generation.py`: normalization and Drizzle generation tests
 - `tests/test_ingestion.py`: OpenAPI ingestion and diagnostics tests
 - `tests/test_phase4.py`: migration planning and DTO mapper tests
+- `tests/test_phase5.py`: end-to-end workflow and release-readiness docs tests
 - `tests/test_validation.py`: regression tests for DSL and IR validation
 - `examples/canonical/blog-model.json`: normalized IR example
+- `examples/README.md`: example corpus overview
+- `examples/end-to-end/blog/README.md`: end-to-end walkthrough
 - `examples/generated/blog-dto-mappers.ts`: generated mapper snapshot
 - `examples/generated/blog-dto-mappers.diagnostics.json`: mapper diagnostics snapshot
 - `examples/generated/blog-schema.ts`: generated Drizzle snapshot
@@ -138,8 +149,9 @@ x-openmodels:
 
 ## Status
 
-This repository is still in the design phase. The current deliverables are the
-draft format and examples needed to start building a parser, validator, and IR.
+The MVP surface is implemented. The current focus is preparing the first public
+release candidate around the documented `drizzle-pg` flow, migration planning,
+and mapper diagnostics.
 
 ## Testing
 
@@ -149,6 +161,9 @@ Run the current validation tests with:
 python3 -m pip install -r requirements-dev.txt
 python3 -m unittest discover -s tests
 ```
+
+See [docs/workflows.md](./docs/workflows.md) for the day-to-day commands and
+[docs/release-policy.md](./docs/release-policy.md) for release expectations.
 
 Generate files declared in `x-openmodels.outputs` with:
 
