@@ -1,11 +1,12 @@
 import io
 import json
+import subprocess
 import runpy
 import shutil
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest import mock
 
@@ -62,6 +63,36 @@ class ScriptTests(unittest.TestCase):
 
         self.assertIn("Generated drizzle-pg artifact:", stdout.getvalue())
         self.assertTrue((temp_dir / "schema.ts").exists() or (temp_dir / "blog-schema.ts").exists())
+
+    def test_openmodels_cli_main_prints_subprocess_error_and_exits(self) -> None:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        error = subprocess.CalledProcessError(
+            7,
+            ["openmodels-rs", "generate"],
+            output="rust stdout\n",
+            stderr="rust stderr\n",
+        )
+
+        with mock.patch.object(
+            sys,
+            "argv",
+            [
+                "openmodels.cli",
+                "--input",
+                str(ROOT_DIR / "examples" / "openapi" / "blog-api.yaml"),
+                "--out-dir",
+                "out",
+            ],
+        ), mock.patch(
+            "openmodels.cli.generate_artifacts_to_directory",
+            side_effect=error,
+        ), redirect_stdout(stdout), redirect_stderr(stderr), self.assertRaises(SystemExit) as exc:
+            openmodels_cli.main()
+
+        self.assertEqual(7, exc.exception.code)
+        self.assertIn("rust stdout", stdout.getvalue())
+        self.assertIn("rust stderr", stderr.getvalue())
 
     def test_generate_models_wrapper_runs_main(self) -> None:
         with mock.patch("openmodels.cli.main") as mocked_main:

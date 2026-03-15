@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -13,6 +14,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from openmodels.registry import list_adapters
+from openmodels.rust_cli import print_subprocess_error, run_rust_cli
 
 
 KNOWN_ADAPTER_TARGETS = {adapter.key for adapter in list_adapters()}
@@ -343,23 +345,36 @@ def validate_canonical_model_semantics(model: dict[str, Any]) -> list[Diagnostic
 
 
 def validate_examples() -> list[Diagnostic]:
-    x_openmodels_schema = load_json(ROOT / "schemas" / "x-openmodels.schema.json")
-    canonical_schema = load_json(ROOT / "schemas" / "canonical-model.schema.json")
-    openapi_document = load_yaml(ROOT / "examples" / "openapi" / "blog-api.yaml")
-    openapi_document_v1 = load_yaml(ROOT / "examples" / "openapi" / "blog-api-v1.yaml")
-    canonical_document = load_json(ROOT / "examples" / "canonical" / "blog-model.json")
+    try:
+        run_rust_cli(["validate-examples", "--json"])
+    except subprocess.CalledProcessError as error:
+        diagnostics = _parse_diagnostics_json(error.stdout)
+        if diagnostics is not None:
+            return diagnostics
+        print_subprocess_error(error)
+        raise SystemExit(error.returncode) from error
+    return []
 
-    jsonschema.Draft202012Validator.check_schema(x_openmodels_schema)
-    jsonschema.Draft202012Validator.check_schema(canonical_schema)
 
-    jsonschema.validate(openapi_document["x-openmodels"], x_openmodels_schema)
-    jsonschema.validate(openapi_document_v1["x-openmodels"], x_openmodels_schema)
-    jsonschema.validate(canonical_document, canonical_schema)
+def _parse_diagnostics_json(stdout: str) -> list[Diagnostic] | None:
+    try:
+        payload = json.loads(stdout)
+    except json.JSONDecodeError:
+        return None
+
+    if not isinstance(payload, list):
+        return None
 
     diagnostics: list[Diagnostic] = []
-    diagnostics.extend(validate_x_openmodels_semantics(openapi_document["x-openmodels"]))
-    diagnostics.extend(validate_x_openmodels_semantics(openapi_document_v1["x-openmodels"]))
-    diagnostics.extend(validate_canonical_model_semantics(canonical_document))
+    for item in payload:
+        if not isinstance(item, dict):
+            return None
+        code = item.get("code")
+        path = item.get("path")
+        message = item.get("message")
+        if not all(isinstance(value, str) for value in (code, path, message)):
+            return None
+        diagnostics.append(Diagnostic(code=code, path=path, message=message))
     return diagnostics
 
 

@@ -2,15 +2,13 @@
 
 import argparse
 import sys
+import subprocess
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
-from openmodels.common import ensure_directory
-from openmodels.loader import load_openapi_document
-from openmodels.mappers import generate_mapper_files
-from openmodels.normalize import normalize_openapi_document
+from openmodels.rust_cli import print_process_output, print_subprocess_error, run_rust_cli
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -39,22 +37,24 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-
-    document = load_openapi_document(args.input)
-    canonical_model = normalize_openapi_document(document)
-    generated_files = generate_mapper_files(
-        document,
-        canonical_model,
-        filename=args.filename,
-        diagnostics_filename=args.diagnostics_filename,
-    )
-
-    out_dir = Path(args.out_dir)
-    ensure_directory(out_dir)
-    for generated_file in generated_files:
-        target_path = out_dir / generated_file.path
-        target_path.write_text(generated_file.content)
-        print(f"Generated mapper artifact: {target_path}")
+    try:
+        process = run_rust_cli(
+            [
+                "generate-mappers",
+                "--input",
+                args.input,
+                "--out-dir",
+                args.out_dir,
+                "--filename",
+                args.filename,
+                "--diagnostics-filename",
+                args.diagnostics_filename,
+            ]
+        )
+    except subprocess.CalledProcessError as error:
+        print_subprocess_error(error)
+        raise SystemExit(error.returncode) from error
+    print_process_output(process)
 
 
 if __name__ == "__main__":

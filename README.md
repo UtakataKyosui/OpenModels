@@ -127,16 +127,18 @@ x-openmodels:
 - `docs/workflows.md`: day-to-day generator workflows
 - `docs/openapi-first-comparison.md`: comparison with plain OpenAPI-first usage
 - `docs/release-policy.md`: versioning policy and release checklist
+- `docs/rust-rewrite-bootstrap.md`: Rust bootstrap scope and migration entrypoint
 - `docs/spec.md`: extension draft and normalization rules
 - `openmodels/`: loader, normalizer, adapter registry, and generators
+- `rust/openmodels-rs/`: Rust bootstrap workspace for loader, normalization, generators, migration planning, and mapper generation
 - `schemas/canonical-model.schema.json`: JSON Schema for the normalized IR
 - `schemas/x-openmodels.schema.json`: JSON Schema for `x-openmodels`
-- `scripts/generate_models.py`: generic CLI wrapper that reads `x-openmodels.outputs`
-- `scripts/generate_mappers.py`: DTO mapper generator
-- `scripts/plan_migration.py`: migration plan generator
-- `scripts/generate_drizzle.py`: CLI wrapper to generate Drizzle files
+- `scripts/generate_models.py`: generic CLI wrapper around the Rust generator
+- `scripts/generate_mappers.py`: DTO mapper CLI wrapper around the Rust generator
+- `scripts/plan_migration.py`: migration plan CLI wrapper around the Rust generator
+- `scripts/generate_drizzle.py`: Drizzle-target CLI wrapper
 - `scripts/check_seaorm_fixture.py`: prepare or compile-check the SeaORM blog fixture
-- `scripts/validate_examples.py`: example validator for DSL and IR samples
+- `scripts/validate_examples.py`: example validator wrapper around the Rust validator
 - `tests/test_generation.py`: normalization and Drizzle generation tests
 - `tests/test_ingestion.py`: OpenAPI ingestion and diagnostics tests
 - `tests/test_phase4.py`: migration planning and DTO mapper tests
@@ -162,6 +164,13 @@ The MVP surface is implemented. The current focus is preparing the first public
 release candidate around the documented `drizzle-pg` flow, migration planning,
 and mapper diagnostics.
 
+A Rust rewrite bootstrap now exists in parallel with the Python reference
+implementation. The first Rust milestone covers `loader + normalize + canonical
+JSON output`, and now includes `drizzle-pg`, `seaorm-rust`, migration-plan
+generation, DTO mapper generation, JSON Schema validation, and example
+validation; see
+[docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md).
+
 ## Testing
 
 Run the current validation tests with:
@@ -169,6 +178,18 @@ Run the current validation tests with:
 ```bash
 python3 -m pip install -r requirements-dev.txt
 python3 -m unittest discover -s tests
+```
+
+Run the Rust bootstrap tests with:
+
+```bash
+cargo test -p openmodels-rs
+```
+
+Run the Rust example validation command with:
+
+```bash
+cargo run -p openmodels-rs -- validate-examples
 ```
 
 See [docs/workflows.md](./docs/workflows.md) for the day-to-day commands and
@@ -219,6 +240,53 @@ python3 scripts/plan_migration.py \
 
 GitHub Actions runs the same checks on every push to `main` and on pull
 requests via `.github/workflows/ci.yml`.
+
+You can also normalize the example OpenAPI document through the Rust CLI:
+
+```bash
+cargo run -p openmodels-rs -- normalize \
+  --input examples/openapi/blog-api.yaml
+```
+
+Generate the Drizzle schema through the Rust CLI with:
+
+```bash
+cargo run -p openmodels-rs -- generate-drizzle \
+  --input examples/openapi/blog-api.yaml
+```
+
+Use the generic Rust artifact generator against declared outputs like this:
+
+```bash
+cargo run -p openmodels-rs -- generate \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated
+```
+
+Generate a migration plan through the Rust CLI with:
+
+```bash
+cargo run -p openmodels-rs -- plan-migration \
+  --from-input examples/openapi/blog-api-v1.yaml \
+  --to-input examples/openapi/blog-api.yaml \
+  --out generated/blog-v1-to-v2.json
+```
+
+Generate DTO mappers through the Rust CLI with:
+
+```bash
+cargo run -p openmodels-rs -- generate-mappers \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated \
+  --filename blog-dto-mappers.ts \
+  --diagnostics-filename blog-dto-mappers.diagnostics.json
+```
+
+Validate the example corpus through the Rust CLI with:
+
+```bash
+cargo run -p openmodels-rs -- validate-examples
+```
 
 SeaORM currently includes Phase 4 fixture and compile-check coverage around the
 Phase 3 relation-aware generator. See

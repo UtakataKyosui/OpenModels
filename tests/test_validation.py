@@ -1,25 +1,47 @@
 import copy
+import subprocess
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
 from scripts.validate_examples import (
+    Diagnostic,
     ROOT,
     load_json,
     load_yaml,
+    validate_examples as run_validate_examples,
     validate_canonical_model_semantics,
-    validate_examples,
     validate_x_openmodels_semantics,
 )
 
 
 class ValidationTests(unittest.TestCase):
     def test_examples_pass_validation(self) -> None:
-        diagnostics = validate_examples()
+        diagnostics = run_validate_examples()
         self.assertEqual([], diagnostics)
+
+    def test_examples_parse_json_diagnostics_from_rust_cli(self) -> None:
+        error = subprocess.CalledProcessError(
+            1,
+            ["openmodels-rs", "validate-examples", "--json"],
+            output='[{"code":"broken","path":"x.y","message":"not good"}]',
+            stderr="Example validation failed.\n",
+        )
+
+        with mock.patch(
+            "scripts.validate_examples.run_rust_cli",
+            side_effect=error,
+        ):
+            diagnostics = run_validate_examples()
+
+        self.assertEqual(
+            [Diagnostic(code="broken", path="x.y", message="not good")],
+            diagnostics,
+        )
 
     def test_x_openmodels_reports_unknown_enum(self) -> None:
         document = load_yaml(ROOT / "examples" / "openapi" / "blog-api.yaml")
