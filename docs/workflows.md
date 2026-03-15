@@ -5,8 +5,8 @@
 1. Start with an OpenAPI document.
 2. Add top-level `x-openmodels`.
 3. Define entities, fields, relations, indexes, constraints, and outputs.
-4. Validate with `python3 scripts/validate_examples.py` or the equivalent file in
-   your own project.
+4. Validate with `python3 scripts/validate_examples.py` or
+   `cargo run -p openmodels-rs -- validate-examples`.
 
 ## 2. Generate ORM Output
 
@@ -55,5 +55,6 @@ Use local commands before pushing:
 
 ```bash
 python3 scripts/validate_examples.py
+cargo run -p openmodels-rs -- validate-examples
 python3 -m unittest discover -s tests
 ```

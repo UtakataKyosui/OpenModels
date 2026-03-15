@@ -4,8 +4,8 @@ use clap::{Parser, Subcommand};
 use openmodels_rs::{
     canonical_model_to_pretty_json, canonical_model_to_value, generate_artifacts_to_directory,
     generate_drizzle_schema, generate_mapper_files, list_adapters, load_canonical_model,
-    load_openapi_document, normalize_openapi_document, plan_migration, write_generated_files,
-    write_json_file,
+    load_openapi_document, normalize_openapi_document, plan_migration, validate_examples,
+    write_generated_files, write_json_file,
 };
 
 #[derive(Debug, Parser)]
@@ -60,6 +60,7 @@ enum Command {
         #[arg(long = "diagnostics-filename")]
         diagnostics_filename: Option<String>,
     },
+    ValidateExamples,
 }
 
 fn main() {
@@ -142,6 +143,22 @@ fn run() -> openmodels_rs::Result<()> {
             let written_paths = write_generated_files(&generated_files, out_dir)?;
             for path in written_paths {
                 println!("Generated mapper artifact: {}", path.display());
+            }
+        }
+        Command::ValidateExamples => {
+            let diagnostics = validate_examples()?;
+            if diagnostics.is_empty() {
+                println!("Validation passed for x-openmodels and canonical model examples.");
+            } else {
+                for diagnostic in diagnostics {
+                    println!(
+                        "{}: {}: {}",
+                        diagnostic.code, diagnostic.path, diagnostic.message
+                    );
+                }
+                return Err(openmodels_rs::OpenModelsError::Message(String::from(
+                    "Example validation failed.",
+                )));
             }
         }
     }

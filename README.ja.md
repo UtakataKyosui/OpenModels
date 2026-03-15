@@ -167,8 +167,8 @@ candidate の整備です。
 これと並行して、Python 実装を参照系として残したまま Rust 化の足場も作り始
 めています。最初の Rust マイルストーンは `loader + normalize + canonical
 JSON 出力` で始め、いまは `drizzle-pg` と `seaorm-rust` の生成に加えて
-`migration planning`、`DTO mapper generation`、`JSON Schema validation`
-まで含む状態です。詳細は
+`migration planning`、`DTO mapper generation`、`JSON Schema validation`、
+example validation まで含む状態です。詳細は
 [docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md) にまとめています。
 
 ## テスト
@@ -184,6 +184,12 @@ Rust 側のブートストラップ検証は次で実行できます。
 
 ```bash
 cargo test -p openmodels-rs
+```
+
+Rust 側の example validation は次で実行できます。
+
+```bash
+cargo run -p openmodels-rs -- validate-examples
 ```
 
 日常的なコマンドは [docs/workflows.md](./docs/workflows.md)、release の
@@ -277,6 +283,12 @@ cargo run -p openmodels-rs -- generate-mappers \
   --out-dir generated \
   --filename blog-dto-mappers.ts \
   --diagnostics-filename blog-dto-mappers.diagnostics.json
+```
+
+Rust CLI で example corpus を検証するには、次を実行します。
+
+```bash
+cargo run -p openmodels-rs -- validate-examples
 ```
 
 SeaORM は現時点で Phase 3 の relation-aware generator に対する Phase 4 の

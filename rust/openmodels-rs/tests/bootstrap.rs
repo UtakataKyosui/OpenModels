@@ -4,7 +4,9 @@ use std::path::PathBuf;
 use openmodels_rs::{
     canonical_model_to_value, generate_artifacts, generate_artifacts_to_directory,
     generate_drizzle_schema, generate_mapper_files, get_adapter, load_canonical_model,
-    load_openapi_document, normalize_openapi_document, plan_migration, write_generated_files,
+    load_openapi_document, normalize_openapi_document, plan_migration,
+    validate_canonical_model_semantics, validate_examples, validate_x_openmodels_semantics,
+    write_generated_files,
 };
 use serde_json::Value;
 use tempfile::tempdir;
@@ -433,4 +435,50 @@ fn mapper_generator_writes_custom_filenames() {
         ],
         written
     );
+}
+
+#[test]
+fn validate_examples_passes_for_current_fixtures() {
+    let diagnostics = validate_examples().unwrap();
+    assert!(diagnostics.is_empty());
+}
+
+#[test]
+fn x_openmodels_semantics_reports_unknown_enum() {
+    let root = repo_root();
+    let mut document = load_openapi_document(root.join("examples/openapi/blog-api.yaml")).unwrap();
+    document.raw["x-openmodels"]["entities"]["Post"]["fields"]["status"]["enum"] =
+        Value::String(String::from("MissingStatus"));
+
+    let diagnostics = validate_x_openmodels_semantics(&document.raw["x-openmodels"]);
+    assert_eq!(
+        vec!["unknown-enum"],
+        diagnostics
+            .iter()
+            .map(|item| item.code.as_str())
+            .collect::<Vec<_>>()
+    );
+}
+
+#[test]
+fn canonical_semantics_report_reference_problems() {
+    let root = repo_root();
+    let mut model = load_canonical_model(root.join("examples/canonical/blog-model.json")).unwrap();
+    model.entities[1].relations[0].foreign_key = Some(String::from("missingField"));
+    model.entities[1].relations[0].references = Some(String::from("missingField"));
+    model.entities[1].constraints[0]
+        .references
+        .as_mut()
+        .unwrap()
+        .entity = String::from("MissingUser");
+
+    let diagnostics = validate_canonical_model_semantics(&model);
+    let codes = diagnostics
+        .iter()
+        .map(|item| item.code.as_str())
+        .collect::<std::collections::HashSet<_>>();
+
+    assert!(codes.contains("unknown-foreign-key-field"));
+    assert!(codes.contains("unknown-reference-field"));
+    assert!(codes.contains("unknown-constraint-target"));
 }

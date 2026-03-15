@@ -167,7 +167,8 @@ and mapper diagnostics.
 A Rust rewrite bootstrap now exists in parallel with the Python reference
 implementation. The first Rust milestone covers `loader + normalize + canonical
 JSON output`, and now includes `drizzle-pg`, `seaorm-rust`, migration-plan
-generation, DTO mapper generation, and JSON Schema validation; see
+generation, DTO mapper generation, JSON Schema validation, and example
+validation; see
 [docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md).
 
 ## Testing
@@ -183,6 +184,12 @@ Run the Rust bootstrap tests with:
 
 ```bash
 cargo test -p openmodels-rs
+```
+
+Run the Rust example validation command with:
+
+```bash
+cargo run -p openmodels-rs -- validate-examples
 ```
 
 See [docs/workflows.md](./docs/workflows.md) for the day-to-day commands and
@@ -273,6 +280,12 @@ cargo run -p openmodels-rs -- generate-mappers \
   --out-dir generated \
   --filename blog-dto-mappers.ts \
   --diagnostics-filename blog-dto-mappers.diagnostics.json
+```
+
+Validate the example corpus through the Rust CLI with:
+
+```bash
+cargo run -p openmodels-rs -- validate-examples
 ```
 
 SeaORM currently includes Phase 4 fixture and compile-check coverage around the

@@ -31,6 +31,7 @@ Implemented in Rust:
 - SeaORM Rust entity generation from the canonical model
 - migration plan generation from canonical model diffs
 - DTO mapper and diagnostics generation from OpenAPI plus canonical model
+- example corpus validation equivalent to `scripts/validate_examples.py`
 - adapter registry and generic artifact generation for supported targets
 - snapshot test against `examples/canonical/blog-model.json`
 - snapshot test against `examples/generated/blog-schema.ts`
@@ -41,7 +42,7 @@ Implemented in Rust:
 
 Still Python-only:
 
-- example corpus validation via `scripts/validate_examples.py`
+- no major pipeline step remains Python-only in the bootstrap branch
 
 ## Commands
 
@@ -92,6 +93,12 @@ cargo run -p openmodels-rs -- generate-mappers \
   --diagnostics-filename blog-dto-mappers.diagnostics.json
 ```
 
+Validate the example corpus:
+
+```bash
+cargo run -p openmodels-rs -- validate-examples
+```
+
 Write the normalized canonical model to a file:
 
 ```bash
@@ -102,6 +109,5 @@ cargo run -p openmodels-rs -- normalize \
 
 ## Next Steps
 
-- port `scripts/validate_examples.py` or replace it with a Rust equivalent
 - replace Python CLI entrypoints incrementally instead of all at once
 - decide when the Rust CLI should become the default user-facing entrypoint
