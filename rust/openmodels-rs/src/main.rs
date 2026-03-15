@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 use openmodels_rs::{
     canonical_model_to_pretty_json, canonical_model_to_value, generate_artifacts_to_directory,
-    generate_drizzle_schema, list_adapters, load_openapi_document, normalize_openapi_document,
-    write_json_file,
+    generate_drizzle_schema, list_adapters, load_canonical_model, load_openapi_document,
+    normalize_openapi_document, plan_migration, write_json_file,
 };
 
 #[derive(Debug, Parser)]
@@ -40,6 +40,14 @@ enum Command {
         input: PathBuf,
         #[arg(long)]
         out: Option<PathBuf>,
+    },
+    PlanMigration {
+        #[arg(long = "from-input")]
+        from_input: PathBuf,
+        #[arg(long = "to-input")]
+        to_input: PathBuf,
+        #[arg(long)]
+        out: PathBuf,
     },
 }
 
@@ -94,6 +102,17 @@ fn run() -> openmodels_rs::Result<()> {
             } else {
                 print!("{schema}");
             }
+        }
+        Command::PlanMigration {
+            from_input,
+            to_input,
+            out,
+        } => {
+            let before_model = load_canonical_model(from_input)?;
+            let after_model = load_canonical_model(to_input)?;
+            let plan = plan_migration(&before_model, &after_model);
+            write_json_file(out.clone(), &serde_json::to_value(plan)?)?;
+            println!("Generated migration plan: {}", out.display());
         }
     }
     Ok(())

@@ -23,18 +23,20 @@ Implemented in Rust:
 - workspace bootstrap under `rust/openmodels-rs`
 - typed canonical model structs
 - OpenAPI loading
+- canonical model input loading for OpenAPI and normalized JSON/YAML
 - JSON Pointer and `$ref` resolution
 - canonical normalization for the current documented DSL
 - Drizzle PostgreSQL schema generation from the canonical model
 - SeaORM Rust entity generation from the canonical model
+- migration plan generation from canonical model diffs
 - adapter registry and generic artifact generation for supported targets
 - snapshot test against `examples/canonical/blog-model.json`
 - snapshot test against `examples/generated/blog-schema.ts`
 - snapshot tests against `examples/generated/seaorm-entity/entity/*.rs`
+- snapshot test against `examples/migrations/blog-v1-to-v2.json`
 
 Still Python-only:
 
-- migration planning
 - DTO mapper generation
 - JSON Schema validation against `schemas/x-openmodels.schema.json`
 
@@ -68,6 +70,15 @@ cargo run -p openmodels-rs -- generate \
   --out-dir generated
 ```
 
+Generate a migration plan between two model versions:
+
+```bash
+cargo run -p openmodels-rs -- plan-migration \
+  --from-input examples/openapi/blog-api-v1.yaml \
+  --to-input examples/openapi/blog-api.yaml \
+  --out /tmp/blog-v1-to-v2.json
+```
+
 Write the normalized canonical model to a file:
 
 ```bash
@@ -80,4 +91,4 @@ cargo run -p openmodels-rs -- normalize \
 
 - add JSON Schema validation parity with the Python loader
 - replace Python CLI entrypoints incrementally instead of all at once
-- port migration planning and DTO mapper generation
+- port DTO mapper generation

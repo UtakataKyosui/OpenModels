@@ -130,7 +130,7 @@ x-openmodels:
 - `docs/rust-rewrite-bootstrap.md`: Rust bootstrap scope and migration entrypoint
 - `docs/spec.md`: extension draft and normalization rules
 - `openmodels/`: loader, normalizer, adapter registry, and generators
-- `rust/openmodels-rs/`: Rust bootstrap workspace for loader and canonical normalization
+- `rust/openmodels-rs/`: Rust bootstrap workspace for loader, normalization, generators, and migration planning
 - `schemas/canonical-model.schema.json`: JSON Schema for the normalized IR
 - `schemas/x-openmodels.schema.json`: JSON Schema for `x-openmodels`
 - `scripts/generate_models.py`: generic CLI wrapper that reads `x-openmodels.outputs`
@@ -166,7 +166,8 @@ and mapper diagnostics.
 
 A Rust rewrite bootstrap now exists in parallel with the Python reference
 implementation. The first Rust milestone covers `loader + normalize + canonical
-JSON output`, and now includes `drizzle-pg` and `seaorm-rust` generation; see
+JSON output`, and now includes `drizzle-pg`, `seaorm-rust`, and migration-plan
+generation; see
 [docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md).
 
 ## Testing
@@ -253,6 +254,15 @@ Use the generic Rust artifact generator against declared outputs like this:
 cargo run -p openmodels-rs -- generate \
   --input examples/openapi/blog-api.yaml \
   --out-dir generated
+```
+
+Generate a migration plan through the Rust CLI with:
+
+```bash
+cargo run -p openmodels-rs -- plan-migration \
+  --from-input examples/openapi/blog-api-v1.yaml \
+  --to-input examples/openapi/blog-api.yaml \
+  --out generated/blog-v1-to-v2.json
 ```
 
 SeaORM currently includes Phase 4 fixture and compile-check coverage around the

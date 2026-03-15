@@ -3,7 +3,8 @@ use std::path::PathBuf;
 
 use openmodels_rs::{
     canonical_model_to_value, generate_artifacts, generate_artifacts_to_directory,
-    generate_drizzle_schema, get_adapter, load_openapi_document, normalize_openapi_document,
+    generate_drizzle_schema, get_adapter, load_canonical_model, load_openapi_document,
+    normalize_openapi_document, plan_migration,
 };
 use serde_json::Value;
 use tempfile::tempdir;
@@ -199,4 +200,165 @@ fn loader_rejects_unsupported_openapi_version() {
 
     let error = load_openapi_document(&path).unwrap_err().to_string();
     assert!(error.contains("Unsupported OpenAPI version"));
+}
+
+#[test]
+fn migration_planner_matches_existing_snapshot() {
+    let root = repo_root();
+    let before_model =
+        load_canonical_model(root.join("examples/openapi/blog-api-v1.yaml")).unwrap();
+    let after_model = load_canonical_model(root.join("examples/openapi/blog-api.yaml")).unwrap();
+    let actual = serde_json::to_value(plan_migration(&before_model, &after_model)).unwrap();
+    let expected: Value = serde_json::from_str(
+        &fs::read_to_string(root.join("examples/migrations/blog-v1-to-v2.json")).unwrap(),
+    )
+    .unwrap();
+
+    assert_eq!(expected, actual);
+}
+
+#[test]
+fn migration_planner_covers_branchy_changes_and_warnings() {
+    let before_model: openmodels_rs::CanonicalModel = serde_json::from_value(serde_json::json!({
+        "version": "0.1",
+        "entities": [
+            {
+                "name": "Alpha",
+                "table": "alpha",
+                "sourceSchemas": {},
+                "fields": [
+                    {"name": "id", "storageName": "id", "type": "uuid", "nullable": false, "persisted": true, "generated": "database", "sourceSchemas": {}, "primaryKey": true},
+                    {"name": "name", "storageName": "name", "type": "varchar", "nullable": true, "persisted": true, "generated": "none", "sourceSchemas": {}, "length": 20},
+                    {"name": "legacy", "storageName": "legacy", "type": "varchar", "nullable": false, "persisted": true, "generated": "none", "sourceSchemas": {}, "length": 50, "default": "legacy"}
+                ],
+                "relations": [],
+                "indexes": [
+                    {"name": "alpha_name_idx", "fields": ["name"], "unique": false},
+                    {"name": "alpha_unique_idx", "fields": ["name"], "unique": true}
+                ],
+                "constraints": [
+                    {"kind": "check", "name": "alpha_name_check", "expression": "name <> ''"},
+                    {"kind": "unique", "name": "alpha_name_unique", "fields": ["name"]},
+                    {"kind": "foreignKey", "name": "alpha_fk_multi", "fields": ["name", "legacy"], "references": {"entity": "Gamma", "fields": ["name", "legacy"]}}
+                ]
+            },
+            {
+                "name": "Gamma",
+                "table": "gamma",
+                "sourceSchemas": {},
+                "fields": [
+                    {"name": "id", "storageName": "id", "type": "uuid", "nullable": false, "persisted": true, "generated": "database", "sourceSchemas": {}, "primaryKey": true},
+                    {"name": "name", "storageName": "name", "type": "varchar", "nullable": false, "persisted": true, "generated": "none", "sourceSchemas": {}, "length": 20},
+                    {"name": "legacy", "storageName": "legacy", "type": "varchar", "nullable": false, "persisted": true, "generated": "none", "sourceSchemas": {}, "length": 20}
+                ],
+                "relations": [],
+                "indexes": [],
+                "constraints": []
+            },
+            {
+                "name": "DropMe",
+                "table": "drop_me",
+                "sourceSchemas": {},
+                "fields": [
+                    {"name": "id", "storageName": "id", "type": "uuid", "nullable": false, "persisted": true, "generated": "database", "sourceSchemas": {}, "primaryKey": true}
+                ],
+                "relations": [],
+                "indexes": [],
+                "constraints": []
+            }
+        ]
+    }))
+    .unwrap();
+    let after_model: openmodels_rs::CanonicalModel = serde_json::from_value(serde_json::json!({
+        "version": "0.2",
+        "entities": [
+            {
+                "name": "Alpha",
+                "table": "alpha_new",
+                "sourceSchemas": {},
+                "fields": [
+                    {"name": "id", "storageName": "id", "type": "uuid", "nullable": false, "persisted": true, "generated": "database", "sourceSchemas": {}, "primaryKey": true},
+                    {"name": "name", "storageName": "name_v2", "type": "text", "nullable": false, "persisted": true, "generated": "none", "sourceSchemas": {}, "length": 10},
+                    {"name": "requiredField", "storageName": "required_field", "type": "integer", "nullable": false, "persisted": true, "generated": "none", "sourceSchemas": {}}
+                ],
+                "relations": [],
+                "indexes": [
+                    {"name": "alpha_name_idx", "fields": ["name", "requiredField"], "unique": false},
+                    {"name": "alpha_new_idx", "fields": ["requiredField"], "unique": false}
+                ],
+                "constraints": [
+                    {"kind": "check", "name": "alpha_name_check", "expression": "char_length(name_v2) > 0"},
+                    {"kind": "foreignKey", "name": "alpha_fk_multi", "fields": ["name", "requiredField"], "references": {"entity": "Gamma", "fields": ["name", "legacy"]}},
+                    {"kind": "primaryKey", "name": "alpha_pk", "fields": ["id"]}
+                ]
+            },
+            {
+                "name": "Gamma",
+                "table": "gamma",
+                "sourceSchemas": {},
+                "fields": [
+                    {"name": "id", "storageName": "id", "type": "uuid", "nullable": false, "persisted": true, "generated": "database", "sourceSchemas": {}, "primaryKey": true},
+                    {"name": "name", "storageName": "name", "type": "varchar", "nullable": false, "persisted": true, "generated": "none", "sourceSchemas": {}, "length": 20},
+                    {"name": "legacy", "storageName": "legacy", "type": "varchar", "nullable": false, "persisted": true, "generated": "none", "sourceSchemas": {}, "length": 20}
+                ],
+                "relations": [],
+                "indexes": [],
+                "constraints": []
+            },
+            {
+                "name": "Beta",
+                "table": "beta",
+                "sourceSchemas": {},
+                "fields": [
+                    {"name": "id", "storageName": "id", "type": "uuid", "nullable": false, "persisted": true, "generated": "database", "sourceSchemas": {}, "primaryKey": true},
+                    {"name": "value", "storageName": "value", "type": "varchar", "nullable": false, "persisted": true, "generated": "none", "sourceSchemas": {}, "length": 20, "default": "x"}
+                ],
+                "relations": [],
+                "indexes": [],
+                "constraints": []
+            }
+        ]
+    }))
+    .unwrap();
+
+    let plan = plan_migration(&before_model, &after_model);
+    let change_kinds = plan
+        .changes
+        .iter()
+        .filter_map(|change| change.get("kind").and_then(Value::as_str))
+        .collect::<std::collections::HashSet<_>>();
+    let warning_codes = plan
+        .warnings
+        .iter()
+        .map(|warning| warning.code.as_str())
+        .collect::<std::collections::HashSet<_>>();
+
+    assert!(change_kinds.is_superset(&std::collections::HashSet::from([
+        "createTable",
+        "dropTable",
+        "renameTable",
+        "addColumn",
+        "dropColumn",
+        "alterColumn",
+        "addIndex",
+        "dropIndex",
+        "alterIndex",
+        "addConstraint",
+        "dropConstraint",
+        "alterConstraint",
+    ])));
+    assert!(warning_codes.is_superset(&std::collections::HashSet::from([
+        "drop-table",
+        "rename-table",
+        "add-required-column-without-default",
+        "drop-column",
+        "change-column-type",
+        "rename-column",
+        "tighten-nullability",
+        "shrink-column-length",
+    ])));
+    assert_eq!("0.1", plan.from_model_version);
+    assert_eq!("0.2", plan.to_model_version);
+    assert!(plan.summary.destructive_changes >= 3);
+    assert!(plan.summary.warnings >= 8);
 }
