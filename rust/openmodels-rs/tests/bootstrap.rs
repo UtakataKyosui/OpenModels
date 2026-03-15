@@ -574,3 +574,47 @@ fn seaorm_rejects_non_string_enum_values() {
         .to_string();
     assert!(error.contains("requires string values"));
 }
+
+#[test]
+fn seaorm_reports_missing_target_entity_without_panicking() {
+    let model: openmodels_rs::CanonicalModel = serde_json::from_value(serde_json::json!({
+        "version": "0.1",
+        "entities": [
+            {
+                "name": "Thing",
+                "table": "things",
+                "sourceSchemas": {},
+                "fields": [
+                    {
+                        "name": "id",
+                        "storageName": "id",
+                        "type": "uuid",
+                        "nullable": false,
+                        "persisted": true,
+                        "generated": "database",
+                        "sourceSchemas": {},
+                        "primaryKey": true
+                    }
+                ],
+                "relations": [
+                    {
+                        "name": "owner",
+                        "kind": "belongsTo",
+                        "targetEntity": "User",
+                        "ownership": "owner",
+                        "foreignKey": "ownerId",
+                        "references": "id"
+                    }
+                ],
+                "indexes": [],
+                "constraints": []
+            }
+        ]
+    }))
+    .unwrap();
+
+    let error = generate_artifacts(&model, Some("seaorm-rust"), None)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("Unknown target entity 'User'."));
+}

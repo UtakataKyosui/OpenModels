@@ -387,6 +387,7 @@ fn has_explicit_unique_constraint(entity: &Entity, field_name: &str) -> bool {
 fn render_column(
     field: &Field,
     entity: &Entity,
+    inline_foreign_keys: &HashMap<&str, &Constraint>,
     tables_by_entity: &HashMap<&str, &str>,
 ) -> Result<Vec<String>> {
     let mut lines = Vec::new();
@@ -409,7 +410,7 @@ fn render_column(
         column_expression.push_str(&format!(".default({})", to_json_literal(default)));
     }
 
-    if let Some(inline_foreign_key) = collect_inline_foreign_keys(entity).get(field.name.as_str()) {
+    if let Some(inline_foreign_key) = inline_foreign_keys.get(field.name.as_str()) {
         let references = inline_foreign_key
             .references
             .as_ref()
@@ -611,13 +612,19 @@ fn render_table(entity: &Entity, tables_by_entity: &HashMap<&str, &str>) -> Resu
     let table_factory =
         adapter_string(entity.adapters.as_ref(), "tableFactory").unwrap_or("pgTable");
     let export_name = table_export_name(&entity.table);
+    let inline_foreign_keys = collect_inline_foreign_keys(entity);
     let mut lines = vec![
         format!("export const {} = {}(", export_name, table_factory),
         format!("  \"{}\",", entity.table),
         String::from("  {"),
     ];
     for field in &entity.fields {
-        lines.extend(render_column(field, entity, tables_by_entity)?);
+        lines.extend(render_column(
+            field,
+            entity,
+            &inline_foreign_keys,
+            tables_by_entity,
+        )?);
     }
     lines.push(String::from("  },"));
 

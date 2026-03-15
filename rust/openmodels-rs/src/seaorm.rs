@@ -391,23 +391,43 @@ fn relation_variant_name(relation: &Relation) -> Result<String> {
     Ok(upper_camel_case(&snake_case(&relation.name)))
 }
 
-fn related_entity_path(entity_by_name: &HashMap<&str, &Entity>, entity_name: &str) -> String {
-    format!(
+fn related_entity<'a>(
+    entity_by_name: &'a HashMap<&str, &'a Entity>,
+    entity_name: &str,
+) -> Result<&'a Entity> {
+    entity_by_name
+        .get(entity_name)
+        .copied()
+        .ok_or_else(|| message(format!("Unknown target entity '{}'.", entity_name)))
+}
+
+fn related_entity_path(
+    entity_by_name: &HashMap<&str, &Entity>,
+    entity_name: &str,
+) -> Result<String> {
+    Ok(format!(
         "super::{}::Entity",
-        module_name(entity_by_name[entity_name])
-    )
+        module_name(related_entity(entity_by_name, entity_name)?)
+    ))
 }
 
 fn related_column_path(
     entity_by_name: &HashMap<&str, &Entity>,
     entity_name: &str,
     field_name: &str,
-) -> String {
-    format!(
+) -> Result<String> {
+    let entity = related_entity(entity_by_name, entity_name)?;
+    if !entity.fields.iter().any(|field| field.name == field_name) {
+        return Err(message(format!(
+            "Unknown target field '{}.{}'.",
+            entity_name, field_name
+        )));
+    }
+    Ok(format!(
         "super::{}::Column::{}",
-        module_name(entity_by_name[entity_name]),
+        module_name(entity),
         column_variant_name(field_name)
-    )
+    ))
 }
 
 fn seaorm_reference_action(value: &str) -> Result<&'static str> {
@@ -457,7 +477,7 @@ fn relation_attribute_lines(
     let mut attributes =
         render_attribute_lines(&string_array(relation_config, "extraAttributes")?, &context)?;
 
-    let target_path = related_entity_path(entity_by_name, &relation.target_entity);
+    let target_path = related_entity_path(entity_by_name, &relation.target_entity)?;
     let mut tokens = Vec::new();
     match relation.kind.as_str() {
         "belongsTo" => {
@@ -480,7 +500,7 @@ fn relation_attribute_lines(
             ));
             tokens.push(format!(
                 "to = \"{}\"",
-                related_column_path(entity_by_name, &relation.target_entity, reference_field)
+                related_column_path(entity_by_name, &relation.target_entity, reference_field)?
             ));
             if let Some(constraint) = matching_foreign_key_constraint(entity, relation) {
                 if let Some(references) = &constraint.references {
@@ -584,7 +604,7 @@ fn related_impl_lines(
         lines.extend([
             format!(
                 "impl Related<{}> for Entity {{",
-                related_entity_path(entity_by_name, &target_entity)
+                related_entity_path(entity_by_name, &target_entity)?
             ),
             String::from("    fn to() -> RelationDef {"),
             format!(

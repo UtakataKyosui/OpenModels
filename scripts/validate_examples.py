@@ -356,9 +356,9 @@ def validate_examples() -> list[Diagnostic]:
     return []
 
 
-def _parse_diagnostics(stdout: str) -> list[Diagnostic]:
+def _parse_diagnostics(stderr: str) -> list[Diagnostic]:
     diagnostics: list[Diagnostic] = []
-    for line in stdout.splitlines():
+    for line in stderr.splitlines():
         try:
             code, path, message = line.split(": ", 2)
         except ValueError:
