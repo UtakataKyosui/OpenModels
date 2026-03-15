@@ -7,6 +7,7 @@ use serde_json::Value;
 
 use crate::error::{Result, message};
 use crate::model::{AdapterMap, Computed, ConstraintReference, JsonObject, Output, SourceSchemas};
+use crate::schema::validate_x_openmodels_schema;
 
 #[derive(Debug, Clone)]
 pub struct LoadedDocument {
@@ -172,6 +173,9 @@ pub fn load_openapi_document(path: impl AsRef<Path>) -> Result<LoadedDocument> {
             "Input document is missing the top-level 'x-openmodels' field.",
         ));
     }
+    validate_x_openmodels_schema(raw.get("x-openmodels").ok_or_else(|| {
+        message("Input document is missing the top-level 'x-openmodels' field.")
+    })?)?;
 
     Ok(LoadedDocument { raw, parsed })
 }

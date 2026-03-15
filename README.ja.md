@@ -167,7 +167,8 @@ candidate の整備です。
 これと並行して、Python 実装を参照系として残したまま Rust 化の足場も作り始
 めています。最初の Rust マイルストーンは `loader + normalize + canonical
 JSON 出力` で始め、いまは `drizzle-pg` と `seaorm-rust` の生成に加えて
-`migration planning` と `DTO mapper generation` まで含む状態です。詳細は
+`migration planning`、`DTO mapper generation`、`JSON Schema validation`
+まで含む状態です。詳細は
 [docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md) にまとめています。
 
 ## テスト

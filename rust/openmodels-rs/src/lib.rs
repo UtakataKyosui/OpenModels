@@ -9,6 +9,7 @@ pub mod model_io;
 pub mod normalize;
 pub mod openapi;
 pub mod registry;
+pub mod schema;
 pub mod seaorm;
 pub mod utils;
 
@@ -25,3 +26,4 @@ pub use normalize::{
 };
 pub use openapi::{load_openapi_document, write_json_file};
 pub use registry::{get_adapter, list_adapters};
+pub use schema::{validate_canonical_model_schema, validate_x_openmodels_schema};

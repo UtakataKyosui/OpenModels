@@ -7,6 +7,7 @@ use crate::error::{Result, message};
 use crate::model::CanonicalModel;
 use crate::normalize::normalize_openapi_document;
 use crate::openapi::load_openapi_document;
+use crate::schema::validate_canonical_model_schema;
 
 pub fn load_canonical_model(path: impl AsRef<Path>) -> Result<CanonicalModel> {
     let path = path.as_ref();
@@ -21,6 +22,7 @@ pub fn load_canonical_model(path: impl AsRef<Path>) -> Result<CanonicalModel> {
     }
 
     if object.contains_key("version") && object.contains_key("entities") {
+        validate_canonical_model_schema(&raw)?;
         return Ok(serde_json::from_value(raw)?);
     }
 

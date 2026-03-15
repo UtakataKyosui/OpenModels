@@ -24,6 +24,7 @@ Implemented in Rust:
 - typed canonical model structs
 - OpenAPI loading
 - canonical model input loading for OpenAPI and normalized JSON/YAML
+- JSON Schema validation for `x-openmodels` and canonical model files
 - JSON Pointer and `$ref` resolution
 - canonical normalization for the current documented DSL
 - Drizzle PostgreSQL schema generation from the canonical model
@@ -40,7 +41,7 @@ Implemented in Rust:
 
 Still Python-only:
 
-- JSON Schema validation against `schemas/x-openmodels.schema.json`
+- example corpus validation via `scripts/validate_examples.py`
 
 ## Commands
 
@@ -101,6 +102,6 @@ cargo run -p openmodels-rs -- normalize \
 
 ## Next Steps
 
-- add JSON Schema validation parity with the Python loader
+- port `scripts/validate_examples.py` or replace it with a Rust equivalent
 - replace Python CLI entrypoints incrementally instead of all at once
 - decide when the Rust CLI should become the default user-facing entrypoint

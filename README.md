@@ -167,7 +167,7 @@ and mapper diagnostics.
 A Rust rewrite bootstrap now exists in parallel with the Python reference
 implementation. The first Rust milestone covers `loader + normalize + canonical
 JSON output`, and now includes `drizzle-pg`, `seaorm-rust`, migration-plan
-generation, and DTO mapper generation; see
+generation, DTO mapper generation, and JSON Schema validation; see
 [docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md).
 
 ## Testing

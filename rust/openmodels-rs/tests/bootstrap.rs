@@ -203,6 +203,32 @@ fn loader_rejects_unsupported_openapi_version() {
 }
 
 #[test]
+fn loader_rejects_extension_that_violates_json_schema() {
+    let temp = tempdir().unwrap();
+    let path = temp.path().join("invalid-extension.yaml");
+    fs::write(
+        &path,
+        "openapi: 3.1.0\ninfo:\n  title: Test\n  version: 0.1.0\npaths: {}\nx-openmodels:\n  version: bad\n  entities: {}\n",
+    )
+    .unwrap();
+
+    let error = load_openapi_document(&path).unwrap_err().to_string();
+    assert!(error.contains("JSON Schema validation failed"));
+    assert!(error.contains("schemas/x-openmodels.schema.json"));
+}
+
+#[test]
+fn canonical_loader_rejects_model_that_violates_json_schema() {
+    let temp = tempdir().unwrap();
+    let path = temp.path().join("invalid-canonical.json");
+    fs::write(&path, r#"{"version":"bad","entities":[]}"#).unwrap();
+
+    let error = load_canonical_model(&path).unwrap_err().to_string();
+    assert!(error.contains("JSON Schema validation failed"));
+    assert!(error.contains("schemas/canonical-model.schema.json"));
+}
+
+#[test]
 fn migration_planner_matches_existing_snapshot() {
     let root = repo_root();
     let before_model =
