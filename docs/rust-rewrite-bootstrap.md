@@ -25,11 +25,12 @@ Implemented in Rust:
 - OpenAPI loading
 - JSON Pointer and `$ref` resolution
 - canonical normalization for the current documented DSL
+- Drizzle PostgreSQL schema generation from the canonical model
 - snapshot test against `examples/canonical/blog-model.json`
+- snapshot test against `examples/generated/blog-schema.ts`
 
 Still Python-only:
 
-- Drizzle generation
 - SeaORM generation
 - migration planning
 - DTO mapper generation
@@ -50,6 +51,13 @@ cargo run -p openmodels-rs -- normalize \
   --input examples/openapi/blog-api.yaml
 ```
 
+Generate the Drizzle schema from the same OpenAPI document:
+
+```bash
+cargo run -p openmodels-rs -- generate-drizzle \
+  --input examples/openapi/blog-api.yaml
+```
+
 Write the normalized canonical model to a file:
 
 ```bash
@@ -61,6 +69,6 @@ cargo run -p openmodels-rs -- normalize \
 ## Next Steps
 
 - add JSON Schema validation parity with the Python loader
-- port Drizzle generation behind the same canonical model types
 - port adapter registry and target selection
+- port SeaORM generation behind the same canonical model types
 - replace Python CLI entrypoints incrementally instead of all at once

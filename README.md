@@ -166,7 +166,8 @@ and mapper diagnostics.
 
 A Rust rewrite bootstrap now exists in parallel with the Python reference
 implementation. The first Rust milestone covers `loader + normalize + canonical
-JSON output`; see [docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md).
+JSON output`, and now includes `drizzle-pg` generation; see
+[docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md).
 
 ## Testing
 
@@ -236,6 +237,13 @@ You can also normalize the example OpenAPI document through the Rust CLI:
 
 ```bash
 cargo run -p openmodels-rs -- normalize \
+  --input examples/openapi/blog-api.yaml
+```
+
+Generate the Drizzle schema through the Rust CLI with:
+
+```bash
+cargo run -p openmodels-rs -- generate-drizzle \
   --input examples/openapi/blog-api.yaml
 ```
 

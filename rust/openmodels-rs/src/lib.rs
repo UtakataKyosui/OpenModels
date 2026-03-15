@@ -1,8 +1,11 @@
+pub mod drizzle;
 pub mod error;
 pub mod model;
 pub mod normalize;
 pub mod openapi;
+pub mod utils;
 
+pub use drizzle::generate_drizzle_schema;
 pub use error::{OpenModelsError, Result};
 pub use model::CanonicalModel;
 pub use normalize::{

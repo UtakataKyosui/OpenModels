@@ -10,6 +10,7 @@ use crate::openapi::{
     ExtensionConstraint, ExtensionEntity, ExtensionField, ExtensionIndex, ExtensionRelation,
     LoadedDocument,
 };
+use crate::utils::snake_case;
 
 pub fn normalize_openapi_document(document: &LoadedDocument) -> Result<CanonicalModel> {
     let extension =
@@ -473,41 +474,6 @@ fn ensure_supported_schema_node(node: &Value, pointer: &str) -> Result<()> {
         }
     }
     Ok(())
-}
-
-fn snake_case(value: &str) -> String {
-    let chars = value.chars().collect::<Vec<_>>();
-    let mut output = String::new();
-
-    for (index, ch) in chars.iter().enumerate() {
-        let previous = index.checked_sub(1).and_then(|item| chars.get(item));
-        let next = chars.get(index + 1);
-
-        if ch.is_ascii_uppercase() {
-            let needs_separator = previous.is_some_and(|previous| {
-                previous.is_ascii_lowercase()
-                    || previous.is_ascii_digit()
-                    || (previous.is_ascii_uppercase()
-                        && next.is_some_and(|next| next.is_ascii_lowercase()))
-            });
-            if needs_separator && !output.ends_with('_') {
-                output.push('_');
-            }
-            output.push(ch.to_ascii_lowercase());
-            continue;
-        }
-
-        if *ch == '-' || *ch == ' ' {
-            if !output.ends_with('_') {
-                output.push('_');
-            }
-            continue;
-        }
-
-        output.push(*ch);
-    }
-
-    output
 }
 
 pub fn canonical_model_to_value(model: &CanonicalModel) -> Result<Value> {
