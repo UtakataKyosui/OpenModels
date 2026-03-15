@@ -127,8 +127,10 @@ x-openmodels:
 - `docs/workflows.md`: day-to-day generator workflows
 - `docs/openapi-first-comparison.md`: comparison with plain OpenAPI-first usage
 - `docs/release-policy.md`: versioning policy and release checklist
+- `docs/rust-rewrite-bootstrap.md`: Rust bootstrap scope and migration entrypoint
 - `docs/spec.md`: extension draft and normalization rules
 - `openmodels/`: loader, normalizer, adapter registry, and generators
+- `rust/openmodels-rs/`: Rust bootstrap workspace for loader and canonical normalization
 - `schemas/canonical-model.schema.json`: JSON Schema for the normalized IR
 - `schemas/x-openmodels.schema.json`: JSON Schema for `x-openmodels`
 - `scripts/generate_models.py`: generic CLI wrapper that reads `x-openmodels.outputs`
@@ -162,6 +164,10 @@ The MVP surface is implemented. The current focus is preparing the first public
 release candidate around the documented `drizzle-pg` flow, migration planning,
 and mapper diagnostics.
 
+A Rust rewrite bootstrap now exists in parallel with the Python reference
+implementation. The first Rust milestone covers `loader + normalize + canonical
+JSON output`; see [docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md).
+
 ## Testing
 
 Run the current validation tests with:
@@ -169,6 +175,12 @@ Run the current validation tests with:
 ```bash
 python3 -m pip install -r requirements-dev.txt
 python3 -m unittest discover -s tests
+```
+
+Run the Rust bootstrap tests with:
+
+```bash
+cargo test -p openmodels-rs
 ```
 
 See [docs/workflows.md](./docs/workflows.md) for the day-to-day commands and
@@ -219,6 +231,13 @@ python3 scripts/plan_migration.py \
 
 GitHub Actions runs the same checks on every push to `main` and on pull
 requests via `.github/workflows/ci.yml`.
+
+You can also normalize the example OpenAPI document through the Rust CLI:
+
+```bash
+cargo run -p openmodels-rs -- normalize \
+  --input examples/openapi/blog-api.yaml
+```
 
 SeaORM currently includes Phase 4 fixture and compile-check coverage around the
 Phase 3 relation-aware generator. See
