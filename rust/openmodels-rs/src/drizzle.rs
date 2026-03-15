@@ -2,11 +2,15 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 
 use serde_json::Value;
 
+use crate::adapter::{BackendAdapter, GeneratedFile};
 use crate::error::{Result, message};
 use crate::model::{AdapterMap, CanonicalModel, Constraint, Entity, Field, Index, JsonObject};
 use crate::utils::{camel_case, escape_template_literal, snake_case, to_json_literal};
 
 pub const DRIZZLE_PG_TARGET: &str = "drizzle-pg";
+pub static DRIZZLE_PG_ADAPTER: DrizzlePgAdapter = DrizzlePgAdapter;
+
+pub struct DrizzlePgAdapter;
 
 pub fn generate_drizzle_schema(model: &CanonicalModel) -> Result<String> {
     let tables_by_entity = model
@@ -178,6 +182,32 @@ pub fn generate_drizzle_schema(model: &CanonicalModel) -> Result<String> {
     }
 
     Ok(sections.join("\n\n") + "\n")
+}
+
+impl BackendAdapter for DrizzlePgAdapter {
+    fn key(&self) -> &'static str {
+        DRIZZLE_PG_TARGET
+    }
+
+    fn description(&self) -> &'static str {
+        "Drizzle ORM schema for PostgreSQL"
+    }
+
+    fn default_filename(&self) -> &'static str {
+        "schema.ts"
+    }
+
+    fn generate_files(
+        &self,
+        canonical_model: &CanonicalModel,
+        filename: Option<&str>,
+        _options: Option<&JsonObject>,
+    ) -> Result<Vec<GeneratedFile>> {
+        Ok(vec![GeneratedFile {
+            path: filename.unwrap_or(self.default_filename()).to_owned(),
+            content: generate_drizzle_schema(canonical_model)?,
+        }])
+    }
 }
 
 fn enum_export_name(enum_name: &str) -> String {
@@ -877,7 +907,9 @@ mod tests {
         };
 
         let generated = generate_drizzle_schema(&model).unwrap();
-        assert!(generated.contains("import { customOrmHelper, relations, sql } from \"drizzle-orm\";"));
+        assert!(
+            generated.contains("import { customOrmHelper, relations, sql } from \"drizzle-orm\";")
+        );
         assert!(generated.contains(
             "import { customTable, jsonb, pgTable, uuid } from \"drizzle-orm/pg-core\";"
         ));

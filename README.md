@@ -247,6 +247,15 @@ cargo run -p openmodels-rs -- generate-drizzle \
   --input examples/openapi/blog-api.yaml
 ```
 
+Use the generic Rust artifact generator with an explicit target like this:
+
+```bash
+cargo run -p openmodels-rs -- generate \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated \
+  --target drizzle-pg
+```
+
 SeaORM currently includes Phase 4 fixture and compile-check coverage around the
 Phase 3 relation-aware generator. See
 [docs/seaorm-phase-4-fixtures.md](./docs/seaorm-phase-4-fixtures.md) for the

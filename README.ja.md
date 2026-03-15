@@ -249,6 +249,16 @@ cargo run -p openmodels-rs -- generate-drizzle \
   --input examples/openapi/blog-api.yaml
 ```
 
+汎用の Rust 生成 CLI を使う場合は、現時点では `drizzle-pg` だけが移植済み
+なので、target を明示して次を実行します。
+
+```bash
+cargo run -p openmodels-rs -- generate \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated \
+  --target drizzle-pg
+```
+
 SeaORM は現時点で Phase 3 の relation-aware generator に対する Phase 4 の
 fixture と compile check workflow まで対応しています。検証フローは
 [docs/seaorm-phase-4-fixtures.md](./docs/seaorm-phase-4-fixtures.md) を参照し、
