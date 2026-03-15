@@ -346,23 +346,34 @@ def validate_canonical_model_semantics(model: dict[str, Any]) -> list[Diagnostic
 
 def validate_examples() -> list[Diagnostic]:
     try:
-        run_rust_cli(["validate-examples"])
+        run_rust_cli(["validate-examples", "--json"])
     except subprocess.CalledProcessError as error:
-        diagnostics = _parse_diagnostics(error.stderr)
-        if diagnostics:
+        diagnostics = _parse_diagnostics_json(error.stdout)
+        if diagnostics is not None:
             return diagnostics
         print_subprocess_error(error)
         raise SystemExit(error.returncode) from error
     return []
 
 
-def _parse_diagnostics(stderr: str) -> list[Diagnostic]:
+def _parse_diagnostics_json(stdout: str) -> list[Diagnostic] | None:
+    try:
+        payload = json.loads(stdout)
+    except json.JSONDecodeError:
+        return None
+
+    if not isinstance(payload, list):
+        return None
+
     diagnostics: list[Diagnostic] = []
-    for line in stderr.splitlines():
-        try:
-            code, path, message = line.split(": ", 2)
-        except ValueError:
-            continue
+    for item in payload:
+        if not isinstance(item, dict):
+            return None
+        code = item.get("code")
+        path = item.get("path")
+        message = item.get("message")
+        if not all(isinstance(value, str) for value in (code, path, message)):
+            return None
         diagnostics.append(Diagnostic(code=code, path=path, message=message))
     return diagnostics
 

@@ -62,7 +62,10 @@ enum Command {
         #[arg(long = "diagnostics-filename")]
         diagnostics_filename: Option<String>,
     },
-    ValidateExamples,
+    ValidateExamples {
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 fn main() {
@@ -160,16 +163,24 @@ fn run() -> openmodels_rs::Result<()> {
                 println!("Generated mapper artifact: {}", path.display());
             }
         }
-        Command::ValidateExamples => {
+        Command::ValidateExamples { json } => {
             let diagnostics = validate_examples()?;
             if diagnostics.is_empty() {
-                println!("Validation passed for x-openmodels and canonical model examples.");
+                if json {
+                    println!("{}", serde_json::to_string(&diagnostics)?);
+                } else {
+                    println!("Validation passed for x-openmodels and canonical model examples.");
+                }
             } else {
-                for diagnostic in diagnostics {
-                    eprintln!(
-                        "{}: {}: {}",
-                        diagnostic.code, diagnostic.path, diagnostic.message
-                    );
+                if json {
+                    println!("{}", serde_json::to_string(&diagnostics)?);
+                } else {
+                    for diagnostic in diagnostics {
+                        eprintln!(
+                            "{}: {}: {}",
+                            diagnostic.code, diagnostic.path, diagnostic.message
+                        );
+                    }
                 }
                 return Err(openmodels_rs::OpenModelsError::Message(String::from(
                     "Example validation failed.",

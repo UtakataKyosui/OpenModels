@@ -26,28 +26,25 @@ fn bool_value(config: Option<&JsonObject>, key: &str) -> Option<bool> {
     config?.get(key).and_then(Value::as_bool)
 }
 
-fn string_array(config: Option<&JsonObject>, key: &str) -> Result<Vec<String>> {
+fn string_array(config: Option<&JsonObject>, key: &str, context: &str) -> Result<Vec<String>> {
     let Some(value) = config.and_then(|config| config.get(key)) else {
         return Ok(Vec::new());
     };
     let Some(items) = value.as_array() else {
         return Err(message(format!(
-            "{} must contain only non-empty strings.",
-            key
+            "{context} must contain only non-empty strings."
         )));
     };
     let mut lines = Vec::new();
     for item in items {
         let Some(text) = item.as_str() else {
             return Err(message(format!(
-                "{} must contain only non-empty strings.",
-                key
+                "{context} must contain only non-empty strings."
             )));
         };
         if text.trim().is_empty() {
             return Err(message(format!(
-                "{} must contain only non-empty strings.",
-                key
+                "{context} must contain only non-empty strings."
             )));
         }
         lines.push(text.to_owned());
@@ -301,8 +298,10 @@ fn field_attribute_lines(field: &Field) -> Result<Vec<String>> {
         "Field '{}' adapters.seaorm-rust.extraAttributes",
         field.name
     );
-    let mut attributes =
-        render_attribute_lines(&string_array(adapter_config, "extraAttributes")?, &context)?;
+    let mut attributes = render_attribute_lines(
+        &string_array(adapter_config, "extraAttributes", &context)?,
+        &context,
+    )?;
 
     let mut tokens = Vec::new();
     if field.primary_key.unwrap_or(false) {
@@ -343,7 +342,8 @@ fn render_model(entity: &Entity) -> Result<String> {
         String::from("Eq"),
         String::from("DeriveEntityModel"),
     ];
-    for derive_item in string_array(entity_config, "extraDerives")? {
+    let derive_context = format!("Entity '{}' adapters.seaorm-rust.extraDerives", entity.name);
+    for derive_item in string_array(entity_config, "extraDerives", &derive_context)? {
         if !derive_items.contains(&derive_item) {
             derive_items.push(derive_item);
         }
@@ -355,7 +355,7 @@ fn render_model(entity: &Entity) -> Result<String> {
     );
     let mut lines = vec![format!("#[derive({})]", derive_items.join(", "))];
     lines.extend(render_attribute_lines(
-        &string_array(entity_config, "extraAttributes")?,
+        &string_array(entity_config, "extraAttributes", &entity_context)?,
         &entity_context,
     )?);
     lines.push(format!("#[sea_orm(table_name = \"{}\")]", entity.table));
@@ -474,8 +474,10 @@ fn relation_attribute_lines(
         "Relation '{}.{}' adapters.seaorm-rust.extraAttributes",
         entity.name, relation.name
     );
-    let mut attributes =
-        render_attribute_lines(&string_array(relation_config, "extraAttributes")?, &context)?;
+    let mut attributes = render_attribute_lines(
+        &string_array(relation_config, "extraAttributes", &context)?,
+        &context,
+    )?;
 
     let target_path = related_entity_path(entity_by_name, &relation.target_entity)?;
     let mut tokens = Vec::new();

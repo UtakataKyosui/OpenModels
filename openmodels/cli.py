@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import subprocess
 from pathlib import Path
 
 from .registry import list_adapters
-from .rust_cli import parse_generated_paths, run_rust_cli
+from .rust_cli import parse_generated_paths, print_subprocess_error, run_rust_cli
 
 
 def generate_artifacts_to_directory(
@@ -70,12 +71,17 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-    written_paths = generate_artifacts_to_directory(
-        args.input,
-        args.out_dir,
-        target=args.target,
-        filename=args.filename,
-    )
+    try:
+        written_paths = generate_artifacts_to_directory(
+            args.input,
+            args.out_dir,
+            target=args.target,
+            filename=args.filename,
+        )
+    except subprocess.CalledProcessError as error:
+        print_subprocess_error(error)
+        raise SystemExit(error.returncode) from error
+
     for path in written_paths:
         if args.target:
             print(f"Generated {args.target} artifact: {path}")
