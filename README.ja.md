@@ -167,7 +167,7 @@ candidate の整備です。
 これと並行して、Python 実装を参照系として残したまま Rust 化の足場も作り始
 めています。最初の Rust マイルストーンは `loader + normalize + canonical
 JSON 出力` で始め、いまは `drizzle-pg` と `seaorm-rust` の生成に加えて
-`migration planning` まで含む状態です。詳細は
+`migration planning` と `DTO mapper generation` まで含む状態です。詳細は
 [docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md) にまとめています。
 
 ## テスト
@@ -266,6 +266,16 @@ cargo run -p openmodels-rs -- plan-migration \
   --from-input examples/openapi/blog-api-v1.yaml \
   --to-input examples/openapi/blog-api.yaml \
   --out generated/blog-v1-to-v2.json
+```
+
+Rust CLI で DTO mapper を生成するには、次を実行します。
+
+```bash
+cargo run -p openmodels-rs -- generate-mappers \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir generated \
+  --filename blog-dto-mappers.ts \
+  --diagnostics-filename blog-dto-mappers.diagnostics.json
 ```
 
 SeaORM は現時点で Phase 3 の relation-aware generator に対する Phase 4 の

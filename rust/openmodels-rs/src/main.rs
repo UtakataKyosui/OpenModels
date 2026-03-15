@@ -3,8 +3,9 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 use openmodels_rs::{
     canonical_model_to_pretty_json, canonical_model_to_value, generate_artifacts_to_directory,
-    generate_drizzle_schema, list_adapters, load_canonical_model, load_openapi_document,
-    normalize_openapi_document, plan_migration, write_json_file,
+    generate_drizzle_schema, generate_mapper_files, list_adapters, load_canonical_model,
+    load_openapi_document, normalize_openapi_document, plan_migration, write_generated_files,
+    write_json_file,
 };
 
 #[derive(Debug, Parser)]
@@ -48,6 +49,16 @@ enum Command {
         to_input: PathBuf,
         #[arg(long)]
         out: PathBuf,
+    },
+    GenerateMappers {
+        #[arg(long)]
+        input: PathBuf,
+        #[arg(long = "out-dir")]
+        out_dir: PathBuf,
+        #[arg(long)]
+        filename: Option<String>,
+        #[arg(long = "diagnostics-filename")]
+        diagnostics_filename: Option<String>,
     },
 }
 
@@ -113,6 +124,25 @@ fn run() -> openmodels_rs::Result<()> {
             let plan = plan_migration(&before_model, &after_model);
             write_json_file(out.clone(), &serde_json::to_value(plan)?)?;
             println!("Generated migration plan: {}", out.display());
+        }
+        Command::GenerateMappers {
+            input,
+            out_dir,
+            filename,
+            diagnostics_filename,
+        } => {
+            let document = load_openapi_document(input)?;
+            let canonical = normalize_openapi_document(&document)?;
+            let generated_files = generate_mapper_files(
+                &document.raw,
+                &canonical,
+                filename.as_deref(),
+                diagnostics_filename.as_deref(),
+            )?;
+            let written_paths = write_generated_files(&generated_files, out_dir)?;
+            for path in written_paths {
+                println!("Generated mapper artifact: {}", path.display());
+            }
         }
     }
     Ok(())

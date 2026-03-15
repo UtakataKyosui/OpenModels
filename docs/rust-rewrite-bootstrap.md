@@ -29,15 +29,17 @@ Implemented in Rust:
 - Drizzle PostgreSQL schema generation from the canonical model
 - SeaORM Rust entity generation from the canonical model
 - migration plan generation from canonical model diffs
+- DTO mapper and diagnostics generation from OpenAPI plus canonical model
 - adapter registry and generic artifact generation for supported targets
 - snapshot test against `examples/canonical/blog-model.json`
 - snapshot test against `examples/generated/blog-schema.ts`
 - snapshot tests against `examples/generated/seaorm-entity/entity/*.rs`
 - snapshot test against `examples/migrations/blog-v1-to-v2.json`
+- snapshot tests against `examples/generated/blog-dto-mappers.ts` and
+  `examples/generated/blog-dto-mappers.diagnostics.json`
 
 Still Python-only:
 
-- DTO mapper generation
 - JSON Schema validation against `schemas/x-openmodels.schema.json`
 
 ## Commands
@@ -79,6 +81,16 @@ cargo run -p openmodels-rs -- plan-migration \
   --out /tmp/blog-v1-to-v2.json
 ```
 
+Generate DTO mapper artifacts from the OpenAPI document:
+
+```bash
+cargo run -p openmodels-rs -- generate-mappers \
+  --input examples/openapi/blog-api.yaml \
+  --out-dir /tmp/openmodels-rust-mappers \
+  --filename blog-dto-mappers.ts \
+  --diagnostics-filename blog-dto-mappers.diagnostics.json
+```
+
 Write the normalized canonical model to a file:
 
 ```bash
@@ -91,4 +103,4 @@ cargo run -p openmodels-rs -- normalize \
 
 - add JSON Schema validation parity with the Python loader
 - replace Python CLI entrypoints incrementally instead of all at once
-- port DTO mapper generation
+- decide when the Rust CLI should become the default user-facing entrypoint

@@ -3,8 +3,8 @@ use std::path::PathBuf;
 
 use openmodels_rs::{
     canonical_model_to_value, generate_artifacts, generate_artifacts_to_directory,
-    generate_drizzle_schema, get_adapter, load_canonical_model, load_openapi_document,
-    normalize_openapi_document, plan_migration,
+    generate_drizzle_schema, generate_mapper_files, get_adapter, load_canonical_model,
+    load_openapi_document, normalize_openapi_document, plan_migration, write_generated_files,
 };
 use serde_json::Value;
 use tempfile::tempdir;
@@ -361,4 +361,50 @@ fn migration_planner_covers_branchy_changes_and_warnings() {
     assert_eq!("0.2", plan.to_model_version);
     assert!(plan.summary.destructive_changes >= 3);
     assert!(plan.summary.warnings >= 8);
+}
+
+#[test]
+fn mapper_generator_matches_existing_snapshots() {
+    let root = repo_root();
+    let document = load_openapi_document(root.join("examples/openapi/blog-api.yaml")).unwrap();
+    let canonical = normalize_openapi_document(&document).unwrap();
+    let generated = generate_mapper_files(&document.raw, &canonical, None, None).unwrap();
+    let generated = generated
+        .iter()
+        .map(|file| (file.path.as_str(), file.content.as_str()))
+        .collect::<std::collections::HashMap<_, _>>();
+
+    assert_eq!(
+        fs::read_to_string(root.join("examples/generated/blog-dto-mappers.ts")).unwrap(),
+        generated["dto-mappers.ts"]
+    );
+    assert_eq!(
+        fs::read_to_string(root.join("examples/generated/blog-dto-mappers.diagnostics.json"))
+            .unwrap(),
+        generated["dto-mappers.diagnostics.json"]
+    );
+}
+
+#[test]
+fn mapper_generator_writes_custom_filenames() {
+    let root = repo_root();
+    let document = load_openapi_document(root.join("examples/openapi/blog-api.yaml")).unwrap();
+    let canonical = normalize_openapi_document(&document).unwrap();
+    let generated = generate_mapper_files(
+        &document.raw,
+        &canonical,
+        Some("mappers.ts"),
+        Some("mappers.json"),
+    )
+    .unwrap();
+    let out_dir = tempdir().unwrap();
+    let written = write_generated_files(&generated, out_dir.path()).unwrap();
+
+    assert_eq!(
+        vec![
+            out_dir.path().join("mappers.ts"),
+            out_dir.path().join("mappers.json")
+        ],
+        written
+    );
 }
