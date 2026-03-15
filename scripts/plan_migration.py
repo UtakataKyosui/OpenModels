@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 import argparse
-import json
 import sys
+import subprocess
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
-from openmodels.model_io import load_canonical_model
-from openmodels.migration import plan_migration
+from openmodels.rust_cli import print_process_output, print_subprocess_error, run_rust_cli
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -25,15 +24,22 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
-
-    before_model = load_canonical_model(args.from_input)
-    after_model = load_canonical_model(args.to_input)
-    plan = plan_migration(before_model, after_model)
-
-    out_path = Path(args.out)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(plan, indent=2, ensure_ascii=False) + "\n")
-    print(f"Generated migration plan: {out_path}")
+    try:
+        process = run_rust_cli(
+            [
+                "plan-migration",
+                "--from-input",
+                args.from_input,
+                "--to-input",
+                args.to_input,
+                "--out",
+                args.out,
+            ]
+        )
+    except subprocess.CalledProcessError as error:
+        print_subprocess_error(error)
+        raise SystemExit(error.returncode) from error
+    print_process_output(process)
 
 
 if __name__ == "__main__":

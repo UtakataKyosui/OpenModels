@@ -12,10 +12,8 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
+from openmodels.cli import generate_artifacts_to_directory
 from openmodels.common import ensure_directory
-from openmodels.generate import generate_artifacts
-from openmodels.loader import load_openapi_document
-from openmodels.normalize import normalize_openapi_document
 
 
 def prepare_fixture(
@@ -28,18 +26,11 @@ def prepare_fixture(
 
     ensure_directory(work_dir)
     shutil.copytree(fixture_dir, work_dir, dirs_exist_ok=True)
-
-    document = load_openapi_document(input_path)
-    canonical_model = normalize_openapi_document(document)
-    generated_files = generate_artifacts(canonical_model, target="seaorm-rust")
-
-    written_paths: list[Path] = []
-    for generated_file in generated_files:
-        target_path = work_dir / "src" / generated_file.path
-        ensure_directory(target_path.parent)
-        target_path.write_text(generated_file.content)
-        written_paths.append(target_path)
-    return written_paths
+    return generate_artifacts_to_directory(
+        input_path,
+        work_dir / "src",
+        target="seaorm-rust",
+    )
 
 
 def cargo_check_fixture(work_dir: Path) -> None:

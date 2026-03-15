@@ -133,12 +133,12 @@ x-openmodels:
 - `rust/openmodels-rs/`: loader と canonical normalization を先行移植する Rust workspace
 - `schemas/canonical-model.schema.json`: 正規化後 IR 用 JSON Schema
 - `schemas/x-openmodels.schema.json`: `x-openmodels` 用 JSON Schema
-- `scripts/generate_models.py`: `x-openmodels.outputs` を読む汎用 CLI
-- `scripts/generate_mappers.py`: DTO mapper 生成 CLI
-- `scripts/plan_migration.py`: migration plan 生成 CLI
-- `scripts/generate_drizzle.py`: Drizzle ファイル生成用 CLI ラッパー
+- `scripts/generate_models.py`: Rust 生成器を呼ぶ `x-openmodels.outputs` 用 CLI
+- `scripts/generate_mappers.py`: Rust 生成器を呼ぶ DTO mapper CLI
+- `scripts/plan_migration.py`: Rust 生成器を呼ぶ migration plan CLI
+- `scripts/generate_drizzle.py`: Drizzle target 用 CLI ラッパー
 - `scripts/check_seaorm_fixture.py`: SeaORM blog fixture の準備と compile check
-- `scripts/validate_examples.py`: DSL と IR のサンプル検証スクリプト
+- `scripts/validate_examples.py`: Rust validator を呼ぶ DSL / IR サンプル検証 CLI
 - `tests/test_generation.py`: 正規化と Drizzle 生成のテスト
 - `tests/test_ingestion.py`: OpenAPI 取り込みと診断のテスト
 - `tests/test_phase4.py`: migration planning と DTO mapper のテスト

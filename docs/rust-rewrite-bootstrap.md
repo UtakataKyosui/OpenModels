@@ -40,10 +40,6 @@ Implemented in Rust:
 - snapshot tests against `examples/generated/blog-dto-mappers.ts` and
   `examples/generated/blog-dto-mappers.diagnostics.json`
 
-Still Python-only:
-
-- no major pipeline step remains Python-only in the bootstrap branch
-
 ## Commands
 
 Run the Rust tests:
@@ -109,5 +105,5 @@ cargo run -p openmodels-rs -- normalize \
 
 ## Next Steps
 
-- replace Python CLI entrypoints incrementally instead of all at once
+- reduce or retire the remaining Python reference wrappers when the release plan allows it
 - decide when the Rust CLI should become the default user-facing entrypoint

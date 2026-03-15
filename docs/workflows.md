@@ -11,14 +11,15 @@
 ## 2. Generate ORM Output
 
 Use `scripts/generate_models.py` to generate the outputs declared in
-`x-openmodels.outputs`.
+`x-openmodels.outputs`. This wrapper delegates to the Rust CLI.
 
 Use `scripts/generate_drizzle.py` only when you want to force the Drizzle target
-directly.
+directly. This wrapper also delegates to the Rust CLI.
 
 ## 3. Review DTO Boundaries
 
-Generate mapper files with `scripts/generate_mappers.py`.
+Generate mapper files with `scripts/generate_mappers.py`. This wrapper delegates
+to the Rust CLI.
 
 Review `dto-mappers.diagnostics.json` before treating the mapper as production
 ready. Diagnostics mean OpenModels found a boundary that needs an explicit human

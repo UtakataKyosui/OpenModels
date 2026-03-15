@@ -133,12 +133,12 @@ x-openmodels:
 - `rust/openmodels-rs/`: Rust bootstrap workspace for loader, normalization, generators, migration planning, and mapper generation
 - `schemas/canonical-model.schema.json`: JSON Schema for the normalized IR
 - `schemas/x-openmodels.schema.json`: JSON Schema for `x-openmodels`
-- `scripts/generate_models.py`: generic CLI wrapper that reads `x-openmodels.outputs`
-- `scripts/generate_mappers.py`: DTO mapper generator
-- `scripts/plan_migration.py`: migration plan generator
-- `scripts/generate_drizzle.py`: CLI wrapper to generate Drizzle files
+- `scripts/generate_models.py`: generic CLI wrapper around the Rust generator
+- `scripts/generate_mappers.py`: DTO mapper CLI wrapper around the Rust generator
+- `scripts/plan_migration.py`: migration plan CLI wrapper around the Rust generator
+- `scripts/generate_drizzle.py`: Drizzle-target CLI wrapper
 - `scripts/check_seaorm_fixture.py`: prepare or compile-check the SeaORM blog fixture
-- `scripts/validate_examples.py`: example validator for DSL and IR samples
+- `scripts/validate_examples.py`: example validator wrapper around the Rust validator
 - `tests/test_generation.py`: normalization and Drizzle generation tests
 - `tests/test_ingestion.py`: OpenAPI ingestion and diagnostics tests
 - `tests/test_phase4.py`: migration planning and DTO mapper tests

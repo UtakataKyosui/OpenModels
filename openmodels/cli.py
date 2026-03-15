@@ -3,27 +3,8 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from .adapter import GeneratedFile
-from .common import ensure_directory
-from .generate import generate_artifacts
-from .loader import load_openapi_document
-from .normalize import normalize_openapi_document
 from .registry import list_adapters
-
-
-def _write_generated_files(
-    generated_files: list[GeneratedFile],
-    out_dir: str | Path,
-) -> list[Path]:
-    out_path = Path(out_dir)
-    ensure_directory(out_path)
-    written_paths: list[Path] = []
-    for generated_file in generated_files:
-        target_path = out_path / generated_file.path
-        ensure_directory(target_path.parent)
-        target_path.write_text(generated_file.content)
-        written_paths.append(target_path)
-    return written_paths
+from .rust_cli import parse_generated_paths, run_rust_cli
 
 
 def generate_artifacts_to_directory(
@@ -32,14 +13,20 @@ def generate_artifacts_to_directory(
     target: str | None = None,
     filename: str | None = None,
 ) -> list[Path]:
-    document = load_openapi_document(input_path)
-    canonical_model = normalize_openapi_document(document)
-    generated_files = generate_artifacts(
-        canonical_model,
-        target=target,
-        filename=filename,
-    )
-    return _write_generated_files(generated_files, out_dir)
+    args = [
+        "generate",
+        "--input",
+        str(input_path),
+        "--out-dir",
+        str(out_dir),
+    ]
+    if filename:
+        args.extend(["--filename", filename])
+    if target:
+        args.extend(["--target", target])
+
+    process = run_rust_cli(args)
+    return parse_generated_paths(process.stdout)
 
 
 def generate_to_directory(
