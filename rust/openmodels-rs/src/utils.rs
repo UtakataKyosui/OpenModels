@@ -52,6 +52,22 @@ pub fn camel_case(value: &str) -> String {
     output
 }
 
+pub fn upper_camel_case(value: &str) -> String {
+    value
+        .split(['_', '-', ' '])
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            let mut chars = part.chars();
+            let mut output = String::new();
+            if let Some(ch) = chars.next() {
+                output.push(ch.to_ascii_uppercase());
+            }
+            output.extend(chars);
+            output
+        })
+        .collect::<String>()
+}
+
 pub fn escape_template_literal(value: &str) -> String {
     value
         .replace('\\', "\\\\")

@@ -26,13 +26,14 @@ Implemented in Rust:
 - JSON Pointer and `$ref` resolution
 - canonical normalization for the current documented DSL
 - Drizzle PostgreSQL schema generation from the canonical model
+- SeaORM Rust entity generation from the canonical model
 - adapter registry and generic artifact generation for supported targets
 - snapshot test against `examples/canonical/blog-model.json`
 - snapshot test against `examples/generated/blog-schema.ts`
+- snapshot tests against `examples/generated/seaorm-entity/entity/*.rs`
 
 Still Python-only:
 
-- SeaORM generation
 - migration planning
 - DTO mapper generation
 - JSON Schema validation against `schemas/x-openmodels.schema.json`
@@ -59,14 +60,12 @@ cargo run -p openmodels-rs -- generate-drizzle \
   --input examples/openapi/blog-api.yaml
 ```
 
-Generate declared artifacts into a directory through the generic Rust CLI.
-At the moment, use `--target drizzle-pg` because `seaorm-rust` is not ported yet:
+Generate declared artifacts into a directory through the generic Rust CLI:
 
 ```bash
 cargo run -p openmodels-rs -- generate \
   --input examples/openapi/blog-api.yaml \
-  --out-dir generated \
-  --target drizzle-pg
+  --out-dir generated
 ```
 
 Write the normalized canonical model to a file:
@@ -80,5 +79,5 @@ cargo run -p openmodels-rs -- normalize \
 ## Next Steps
 
 - add JSON Schema validation parity with the Python loader
-- port SeaORM generation behind the same canonical model types
 - replace Python CLI entrypoints incrementally instead of all at once
+- port migration planning and DTO mapper generation

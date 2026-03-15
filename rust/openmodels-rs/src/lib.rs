@@ -6,6 +6,7 @@ pub mod model;
 pub mod normalize;
 pub mod openapi;
 pub mod registry;
+pub mod seaorm;
 pub mod utils;
 
 pub use adapter::{BackendAdapter, GeneratedFile};

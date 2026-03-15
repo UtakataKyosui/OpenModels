@@ -166,7 +166,7 @@ and mapper diagnostics.
 
 A Rust rewrite bootstrap now exists in parallel with the Python reference
 implementation. The first Rust milestone covers `loader + normalize + canonical
-JSON output`, and now includes `drizzle-pg` generation; see
+JSON output`, and now includes `drizzle-pg` and `seaorm-rust` generation; see
 [docs/rust-rewrite-bootstrap.md](./docs/rust-rewrite-bootstrap.md).
 
 ## Testing
@@ -247,13 +247,12 @@ cargo run -p openmodels-rs -- generate-drizzle \
   --input examples/openapi/blog-api.yaml
 ```
 
-Use the generic Rust artifact generator with an explicit target like this:
+Use the generic Rust artifact generator against declared outputs like this:
 
 ```bash
 cargo run -p openmodels-rs -- generate \
   --input examples/openapi/blog-api.yaml \
-  --out-dir generated \
-  --target drizzle-pg
+  --out-dir generated
 ```
 
 SeaORM currently includes Phase 4 fixture and compile-check coverage around the
