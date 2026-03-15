@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use serde::Serialize;
 use serde_json::Value;
 
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 use crate::model::{CanonicalModel, Entity, Relation};
 use crate::model_io::load_canonical_model;
 use crate::openapi::load_openapi_document;

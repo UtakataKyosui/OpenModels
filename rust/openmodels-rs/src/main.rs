@@ -35,6 +35,8 @@ enum Command {
         filename: Option<String>,
         #[arg(long, value_parser = parse_target)]
         target: Option<String>,
+        #[arg(long)]
+        json: bool,
     },
     GenerateDrizzle {
         #[arg(long)]
@@ -87,6 +89,7 @@ fn run() -> openmodels_rs::Result<()> {
             out_dir,
             filename,
             target,
+            json,
         } => {
             let written_paths = generate_artifacts_to_directory(
                 input,
@@ -94,11 +97,23 @@ fn run() -> openmodels_rs::Result<()> {
                 target.as_deref(),
                 filename.as_deref(),
             )?;
-            for path in written_paths {
-                if let Some(target) = target.as_deref() {
-                    println!("Generated {} artifact: {}", target, path.display());
-                } else {
-                    println!("Generated declared artifact: {}", path.display());
+            if json {
+                println!(
+                    "{}",
+                    serde_json::to_string(
+                        &written_paths
+                            .iter()
+                            .map(|path| path.display().to_string())
+                            .collect::<Vec<_>>()
+                    )?
+                );
+            } else {
+                for path in written_paths {
+                    if let Some(target) = target.as_deref() {
+                        println!("Generated {} artifact: {}", target, path.display());
+                    } else {
+                        println!("Generated declared artifact: {}", path.display());
+                    }
                 }
             }
         }
@@ -151,7 +166,7 @@ fn run() -> openmodels_rs::Result<()> {
                 println!("Validation passed for x-openmodels and canonical model examples.");
             } else {
                 for diagnostic in diagnostics {
-                    println!(
+                    eprintln!(
                         "{}: {}: {}",
                         diagnostic.code, diagnostic.path, diagnostic.message
                     );

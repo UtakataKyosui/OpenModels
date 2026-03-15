@@ -4,7 +4,7 @@ use serde::Serialize;
 use serde_json::{Map, Value};
 
 use crate::adapter::GeneratedFile;
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 use crate::model::{CanonicalModel, Entity, Field};
 use crate::normalize::resolve_schema_node;
 use crate::utils::to_json_literal;

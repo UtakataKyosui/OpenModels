@@ -1,6 +1,6 @@
 use crate::adapter::BackendAdapter;
 use crate::drizzle::{DRIZZLE_PG_ADAPTER, DRIZZLE_PG_TARGET};
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 use crate::seaorm::{SEAORM_RUST_ADAPTER, SEAORM_RUST_TARGET};
 
 pub fn get_adapter(target: &str) -> Result<&'static dyn BackendAdapter> {

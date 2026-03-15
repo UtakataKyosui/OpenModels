@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use serde_json::Value;
 
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 use crate::model::{
     AdapterMap, CanonicalEnum, CanonicalModel, Constraint, Entity, Field, Index, Relation,
 };

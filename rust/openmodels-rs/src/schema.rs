@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use jsonschema::{Draft, JSONSchema};
 use serde_json::Value;
 
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 
 pub fn validate_x_openmodels_schema(extension: &Value) -> Result<()> {
     validate_instance("schemas/x-openmodels.schema.json", extension)

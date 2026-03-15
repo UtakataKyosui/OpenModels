@@ -3,7 +3,7 @@ use std::path::Path;
 
 use serde_json::Value;
 
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 use crate::model::CanonicalModel;
 use crate::normalize::normalize_openapi_document;
 use crate::openapi::load_openapi_document;

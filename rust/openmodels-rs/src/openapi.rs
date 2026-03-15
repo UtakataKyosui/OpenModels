@@ -5,7 +5,7 @@ use indexmap::IndexMap;
 use serde::Deserialize;
 use serde_json::Value;
 
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 use crate::model::{AdapterMap, Computed, ConstraintReference, JsonObject, Output, SourceSchemas};
 use crate::schema::validate_x_openmodels_schema;
 

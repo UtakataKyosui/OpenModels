@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -46,9 +47,7 @@ def print_subprocess_error(error: subprocess.CalledProcessError) -> None:
 
 
 def parse_generated_paths(stdout: str) -> list[Path]:
-    paths: list[Path] = []
-    marker = " artifact: "
-    for line in stdout.splitlines():
-        if line.startswith("Generated ") and marker in line:
-            paths.append(Path(line.split(marker, 1)[1]))
-    return paths
+    payload = json.loads(stdout)
+    if not isinstance(payload, list):
+        raise ValueError("Rust generator did not return a JSON array of paths.")
+    return [Path(item) for item in payload]

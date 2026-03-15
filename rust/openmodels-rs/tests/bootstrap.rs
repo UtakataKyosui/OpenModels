@@ -482,3 +482,95 @@ fn canonical_semantics_report_reference_problems() {
     assert!(codes.contains("unknown-reference-field"));
     assert!(codes.contains("unknown-constraint-target"));
 }
+
+#[test]
+fn drizzle_rejects_non_string_enum_values() {
+    let model: openmodels_rs::CanonicalModel = serde_json::from_value(serde_json::json!({
+        "version": "0.1",
+        "enums": [
+            {
+                "name": "StatusCode",
+                "sourceSchemas": {},
+                "values": [1, 2]
+            }
+        ],
+        "entities": [
+            {
+                "name": "Thing",
+                "table": "things",
+                "sourceSchemas": {},
+                "fields": [
+                    {
+                        "name": "status",
+                        "storageName": "status",
+                        "type": "varchar",
+                        "nullable": false,
+                        "persisted": true,
+                        "generated": "none",
+                        "enum": "StatusCode",
+                        "sourceSchemas": {}
+                    }
+                ],
+                "relations": [],
+                "indexes": [],
+                "constraints": []
+            }
+        ]
+    }))
+    .unwrap();
+
+    let error = generate_drizzle_schema(&model).unwrap_err().to_string();
+    assert!(error.contains("requires string values"));
+}
+
+#[test]
+fn seaorm_rejects_non_string_enum_values() {
+    let model: openmodels_rs::CanonicalModel = serde_json::from_value(serde_json::json!({
+        "version": "0.1",
+        "enums": [
+            {
+                "name": "StatusCode",
+                "sourceSchemas": {},
+                "values": [1, 2]
+            }
+        ],
+        "entities": [
+            {
+                "name": "Thing",
+                "table": "things",
+                "sourceSchemas": {},
+                "fields": [
+                    {
+                        "name": "id",
+                        "storageName": "id",
+                        "type": "uuid",
+                        "nullable": false,
+                        "persisted": true,
+                        "generated": "database",
+                        "sourceSchemas": {},
+                        "primaryKey": true
+                    },
+                    {
+                        "name": "status",
+                        "storageName": "status",
+                        "type": "varchar",
+                        "nullable": false,
+                        "persisted": true,
+                        "generated": "none",
+                        "enum": "StatusCode",
+                        "sourceSchemas": {}
+                    }
+                ],
+                "relations": [],
+                "indexes": [],
+                "constraints": []
+            }
+        ]
+    }))
+    .unwrap();
+
+    let error = generate_artifacts(&model, Some("seaorm-rust"), None)
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("requires string values"));
+}

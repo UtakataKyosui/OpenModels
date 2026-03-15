@@ -348,7 +348,7 @@ def validate_examples() -> list[Diagnostic]:
     try:
         run_rust_cli(["validate-examples"])
     except subprocess.CalledProcessError as error:
-        diagnostics = _parse_diagnostics(error.stdout)
+        diagnostics = _parse_diagnostics(error.stderr)
         if diagnostics:
             return diagnostics
         print_subprocess_error(error)

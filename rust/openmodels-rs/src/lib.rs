@@ -18,8 +18,8 @@ pub use adapter::{BackendAdapter, GeneratedFile};
 pub use drizzle::generate_drizzle_schema;
 pub use error::{OpenModelsError, Result};
 pub use generate::{generate_artifacts, generate_artifacts_to_directory, write_generated_files};
-pub use mappers::{MapperReport, build_mapper_report, generate_mapper_files};
-pub use migration::{MigrationPlan, plan_migration};
+pub use mappers::{build_mapper_report, generate_mapper_files, MapperReport};
+pub use migration::{plan_migration, MigrationPlan};
 pub use model::CanonicalModel;
 pub use model_io::load_canonical_model;
 pub use normalize::{
@@ -29,6 +29,6 @@ pub use openapi::{load_openapi_document, write_json_file};
 pub use registry::{get_adapter, list_adapters};
 pub use schema::{validate_canonical_model_schema, validate_x_openmodels_schema};
 pub use validate::{
-    Diagnostic as ValidationDiagnostic, validate_canonical_model_semantics, validate_examples,
-    validate_x_openmodels_semantics,
+    validate_canonical_model_semantics, validate_examples, validate_x_openmodels_semantics,
+    Diagnostic as ValidationDiagnostic,
 };

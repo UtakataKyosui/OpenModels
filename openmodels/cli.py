@@ -24,6 +24,7 @@ def generate_artifacts_to_directory(
         args.extend(["--filename", filename])
     if target:
         args.extend(["--target", target])
+    args.append("--json")
 
     process = run_rust_cli(args)
     return parse_generated_paths(process.stdout)

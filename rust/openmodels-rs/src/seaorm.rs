@@ -3,7 +3,7 @@ use std::collections::{BTreeMap, HashMap};
 use serde_json::Value;
 
 use crate::adapter::{BackendAdapter, GeneratedFile};
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 use crate::model::{
     AdapterMap, CanonicalEnum, CanonicalModel, Constraint, Entity, Field, JsonObject, Relation,
 };
@@ -244,7 +244,8 @@ fn active_enums_for_entity<'a>(
         .collect()
 }
 
-fn render_active_enum(enum_definition: &CanonicalEnum, db_type: &str) -> String {
+fn render_active_enum(enum_definition: &CanonicalEnum, db_type: &str) -> Result<String> {
+    let values = seaorm_string_enum_values(enum_definition)?;
     let mut lines = vec![
         String::from("#[derive(Copy, Clone, Debug, PartialEq, Eq, EnumIter, DeriveActiveEnum)]"),
         format!(
@@ -254,18 +255,27 @@ fn render_active_enum(enum_definition: &CanonicalEnum, db_type: &str) -> String 
         ),
         format!("pub enum {} {{", upper_camel_case(&enum_definition.name)),
     ];
-    for value in &enum_definition.values {
-        lines.push(format!(
-            "    #[sea_orm(string_value = {})]",
-            to_json_literal(value)
-        ));
-        lines.push(format!(
-            "    {},",
-            enum_variant_name(value.as_str().unwrap_or_default())
-        ));
+    for value in values {
+        let string_literal = serde_json::to_string(value).expect("json string literal");
+        lines.push(format!("    #[sea_orm(string_value = {})]", string_literal));
+        lines.push(format!("    {},", enum_variant_name(value)));
     }
     lines.push(String::from("}"));
-    lines.join("\n")
+    Ok(lines.join("\n"))
+}
+
+fn seaorm_string_enum_values<'a>(enum_definition: &'a CanonicalEnum) -> Result<Vec<&'a str>> {
+    let mut values = Vec::new();
+    for value in &enum_definition.values {
+        let Some(text) = value.as_str() else {
+            return Err(message(format!(
+                "SeaORM enum '{}' requires string values, but found {}.",
+                enum_definition.name, value
+            )));
+        };
+        values.push(text);
+    }
+    Ok(values)
 }
 
 fn field_comment_lines(field: &Field) -> Vec<String> {
@@ -650,7 +660,7 @@ fn render_entity_file(
             if index > 0 {
                 lines.push(String::new());
             }
-            lines.push(render_active_enum(enum_definition, db_type));
+            lines.push(render_active_enum(enum_definition, db_type)?);
         }
     }
 

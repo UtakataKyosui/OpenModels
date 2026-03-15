@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::adapter::GeneratedFile;
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 use crate::model::{CanonicalModel, Output};
 use crate::normalize::normalize_openapi_document;
 use crate::openapi::load_openapi_document;

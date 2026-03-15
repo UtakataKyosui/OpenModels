@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use serde_json::Value;
 
 use crate::adapter::{BackendAdapter, GeneratedFile};
-use crate::error::{Result, message};
+use crate::error::{message, Result};
 use crate::model::{AdapterMap, CanonicalModel, Constraint, Entity, Field, Index, JsonObject};
 use crate::utils::{camel_case, escape_template_literal, snake_case, to_json_literal};
 
@@ -145,20 +145,20 @@ pub fn generate_drizzle_schema(model: &CanonicalModel) -> Result<String> {
     let enum_blocks = model
         .enums
         .iter()
-        .map(|canonical_enum| {
-            format!(
+        .map(|canonical_enum| -> Result<String> {
+            let values = drizzle_enum_values(canonical_enum)?;
+            Ok(format!(
                 "export const {} = pgEnum(\"{}\", [{}]);",
                 enum_export_name(&canonical_enum.name),
                 snake_case(&canonical_enum.name),
-                canonical_enum
-                    .values
+                values
                     .iter()
-                    .map(to_json_literal)
+                    .map(|value| to_json_literal(value))
                     .collect::<Vec<_>>()
                     .join(", ")
-            )
+            ))
         })
-        .collect::<Vec<_>>();
+        .collect::<Result<Vec<_>>>()?;
     if !enum_blocks.is_empty() {
         sections.push(enum_blocks.join("\n"));
     }
@@ -216,6 +216,22 @@ fn enum_export_name(enum_name: &str) -> String {
 
 fn table_export_name(table_name: &str) -> String {
     camel_case(table_name)
+}
+
+fn drizzle_enum_values<'a>(
+    canonical_enum: &'a crate::model::CanonicalEnum,
+) -> Result<Vec<&'a Value>> {
+    let mut values = Vec::new();
+    for value in &canonical_enum.values {
+        if !value.is_string() {
+            return Err(message(format!(
+                "Drizzle PostgreSQL enum '{}' requires string values, but found {}.",
+                canonical_enum.name, value
+            )));
+        }
+        values.push(value);
+    }
+    Ok(values)
 }
 
 fn relation_export_name(table_name: &str) -> String {
@@ -917,8 +933,6 @@ mod tests {
         assert!(generated.contains(
             "payload: jsonb(\"payload\").notNull().generatedAlwaysAs(sql`build_payload()`),"
         ));
-        assert!(
-            generated.contains("TODO: wire many-to-many relation 'things' through MetricThing")
-        );
+        assert!(generated.contains("TODO: wire many-to-many relation 'things' through MetricThing"));
     }
 }
