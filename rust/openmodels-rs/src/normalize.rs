@@ -488,3 +488,146 @@ pub fn canonical_model_to_pretty_json(model: &CanonicalModel) -> Result<String> 
 fn copy_adapters(adapters: &Option<AdapterMap>) -> Option<AdapterMap> {
     adapters.clone()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde_json::json;
+
+    // --- resolve_json_pointer ---
+
+    #[test]
+    fn resolve_pointer_to_root() {
+        let doc = json!({"a": 1});
+        let result = resolve_json_pointer(&doc, "#").unwrap();
+        assert_eq!(&json!({"a": 1}), result);
+    }
+
+    #[test]
+    fn resolve_pointer_to_nested_field() {
+        let doc = json!({"components": {"schemas": {"User": {"type": "object"}}}});
+        let result =
+            resolve_json_pointer(&doc, "#/components/schemas/User").unwrap();
+        assert_eq!(&json!({"type": "object"}), result);
+    }
+
+    #[test]
+    fn resolve_pointer_to_array_element() {
+        let doc = json!({"items": ["a", "b", "c"]});
+        let result = resolve_json_pointer(&doc, "#/items/1").unwrap();
+        assert_eq!(&json!("b"), result);
+    }
+
+    #[test]
+    fn resolve_pointer_rejects_unsupported_format() {
+        let doc = json!({});
+        let error = resolve_json_pointer(&doc, "/components").unwrap_err();
+        assert!(error.to_string().contains("Unsupported JSON pointer"));
+    }
+
+    #[test]
+    fn resolve_pointer_rejects_missing_key() {
+        let doc = json!({"a": 1});
+        let error = resolve_json_pointer(&doc, "#/missing").unwrap_err();
+        assert!(error.to_string().contains("Pointer not found"));
+    }
+
+    #[test]
+    fn resolve_pointer_rejects_out_of_bounds_index() {
+        let doc = json!({"items": [1, 2]});
+        let error = resolve_json_pointer(&doc, "#/items/5").unwrap_err();
+        assert!(error.to_string().contains("Invalid list pointer segment"));
+    }
+
+    #[test]
+    fn resolve_pointer_decodes_tilde_escapes() {
+        let doc = json!({"a/b": {"c~d": 42}});
+        let result = resolve_json_pointer(&doc, "#/a~1b/c~0d").unwrap();
+        assert_eq!(&json!(42), result);
+    }
+
+    // --- resolve_schema_node ---
+
+    #[test]
+    fn resolve_schema_node_follows_ref() {
+        let doc = json!({
+            "components": {
+                "schemas": {
+                    "User": {"type": "object", "properties": {}}
+                }
+            },
+            "x-openmodels": {}
+        });
+        let result =
+            resolve_schema_node(&doc, "#/components/schemas/User").unwrap();
+        assert_eq!(&json!({"type": "object", "properties": {}}), result);
+    }
+
+    #[test]
+    fn resolve_schema_node_rejects_oneof() {
+        let doc = json!({
+            "components": {
+                "schemas": {
+                    "Status": {"oneOf": [{"type": "string"}]}
+                }
+            }
+        });
+        let error =
+            resolve_schema_node(&doc, "#/components/schemas/Status").unwrap_err();
+        assert!(error.to_string().contains("Unsupported OpenAPI construct 'oneOf'"));
+    }
+
+    #[test]
+    fn resolve_schema_node_rejects_anyof() {
+        let doc = json!({
+            "components": {
+                "schemas": {
+                    "Status": {"anyOf": [{"type": "string"}]}
+                }
+            }
+        });
+        let error =
+            resolve_schema_node(&doc, "#/components/schemas/Status").unwrap_err();
+        assert!(error.to_string().contains("Unsupported OpenAPI construct 'anyOf'"));
+    }
+
+    #[test]
+    fn resolve_schema_node_detects_cyclic_ref() {
+        let doc = json!({
+            "a": {"$ref": "#/b"},
+            "b": {"$ref": "#/a"}
+        });
+        let error = resolve_schema_node(&doc, "#/a").unwrap_err();
+        assert!(error.to_string().contains("Cyclic $ref"));
+    }
+
+    // --- canonical_model_to_value ---
+
+    #[test]
+    fn canonical_model_roundtrips_through_value() {
+        let model = CanonicalModel {
+            version: String::from("0.1"),
+            adapters: None,
+            outputs: None,
+            enums: vec![],
+            entities: vec![],
+        };
+        let value = canonical_model_to_value(&model).unwrap();
+        assert_eq!("0.1", value["version"].as_str().unwrap());
+    }
+
+    // --- canonical_model_to_pretty_json ---
+
+    #[test]
+    fn pretty_json_ends_with_newline() {
+        let model = CanonicalModel {
+            version: String::from("0.1"),
+            adapters: None,
+            outputs: None,
+            enums: vec![],
+            entities: vec![],
+        };
+        let json = canonical_model_to_pretty_json(&model).unwrap();
+        assert!(json.ends_with('\n'));
+    }
+}
